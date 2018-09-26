@@ -1,0 +1,11 @@
+1) to speed up the pipeline:
+   -process in parallel separate stages of processing
+   -InteractionAttributesDAO.updateLastModifiedDate() takes up ~40% of total processing time
+    optimize it by running updates in batches of 100
+   -attrs: updateLastModifiedDate() was called 1,182,379 times,
+    while there are only 842,623 rows in INTERACTION_ATTRIBUTES table;
+    find out what is the source of duplicates
+   -interactions: updateLastModifiedDate() was called 304,841 times,
+    while there are only 192,512 rows in INTERACTIONS table;
+    find out what is the source of duplicates
+

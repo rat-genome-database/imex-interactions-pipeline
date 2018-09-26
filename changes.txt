@@ -1,0 +1,21 @@
+ver 1.0.3  Sep 26, 2018
+  moved from subversion to github
+
+ver 1.0.2  Jun 20, 2017
+  improved reporting of load stats for attributes
+
+ver 1.0.1  May 24, 2017
+  no longer invalid pubmed ids are loaded;
+  15% of incoming references data had pubmed value like this: 'unassigned1304' which is totally uninformative;
+    after consultation with Jennifer, these pubmed data will be filtered out by the pipeline;
+  also stale interaction attributes (attributes that were not present in the incoming data) are deleted
+
+ver 1.0.0  Apr 7, 2017
+  added support for other species: dog, bonobo, chinchilla and squirrel
+
+ver 0.4.0  Jan 12, 2017
+  upgraded build scripts to use GRADLE instead of ANT
+
+ver 0.3.0  Nov 16, 2016
+  by default, pipeline is processing IMEX sources as found in its properties file;
+  added feature to report new IMEX sources available in IMEX registry
