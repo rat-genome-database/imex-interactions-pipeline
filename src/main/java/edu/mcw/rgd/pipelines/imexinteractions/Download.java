@@ -68,7 +68,7 @@ public class Download {
                     bytesReadForSpeciesMap.put(species, totalBytesReadForSpecies+bytesReadForSpecies);
                     totalBytesRead += bytesReadForSpecies;
                 }
-                System.out.println("  bytes read " + totalBytesRead);
+                System.out.println("  bytes read " + Utils.formatThousands(totalBytesRead));
             }
         }
         outputStream.close();
