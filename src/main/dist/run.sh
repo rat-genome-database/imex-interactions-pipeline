@@ -13,6 +13,6 @@ fi
 cd $APPDIR
 java -Dspring.config=$APPDIR/../properties/default_db.xml \
     -Dlog4j.configuration=file://$APPDIR/properties/log4j.properties \
-    -jar bin/$APPNAME.jar "$@" 2>&1 | tee run.log
+    -jar lib/$APPNAME.jar "$@" 2>&1 | tee run.log
 
 mailx -s "[$SERVER] IMEX Interaction Pipeline OK" $EMAIL_LIST < run.log
