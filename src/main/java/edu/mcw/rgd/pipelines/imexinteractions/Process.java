@@ -5,10 +5,8 @@ import edu.mcw.rgd.datamodel.Interaction;
 import edu.mcw.rgd.process.Utils;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
-import java.io.BufferedInputStream;
-import java.io.FileInputStream;
+import java.io.BufferedReader;
 import java.util.*;
-import java.util.zip.GZIPInputStream;
 
 /**
  * Created by jthota on 3/14/2016.
@@ -42,18 +40,16 @@ public class Process {
 
     List<Interaction> loadProteinInteractions(String fileName) throws Exception {
 
-        BufferedInputStream br = new BufferedInputStream(new GZIPInputStream(new FileInputStream(fileName)));
+        BufferedReader br = Utils.openReader(fileName);
 
         List<Interaction> piList1 = new ArrayList<>();
         Parser parser = new Parser();
 
         psidev.psi.mi.tab.io.PsimiTabReader reader = new psidev.psi.mi.tab.PsimiTabReader();
-        Iterator<BinaryInteraction> i$ = reader.iterate(br);
         int count = 0;
 
-        while(i$.hasNext()){
+        for( BinaryInteraction bi: reader.read(br) ){
             count++;
-            BinaryInteraction bi= i$.next();
             List<Interaction> piList2= parser.parseInteraction(bi);
 
             if( piList2.size()>0 ){

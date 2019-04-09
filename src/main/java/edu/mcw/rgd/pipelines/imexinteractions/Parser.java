@@ -140,7 +140,7 @@ public class Parser {
 
         for( CrossReference intAc: (List<CrossReference>) bi.getInteractionAcs() ){
             InteractionAttribute a= new InteractionAttribute();
-            if(intAc.getDatabase().toLowerCase().equals("imex")){
+            if(intAc.getDatabase().toLowerCase().equals("imex") || intAc.getDatabase().toLowerCase().equals("biogrid") ){
                 String name = "interaction_ac";
                 String value = intAc.getIdentifier();
                 a.setAttributeName(name);

@@ -1,3 +1,8 @@
+ver 1.0.5  Apr 9, 2019
+  added Jami parser -- for testing mostly
+  added preliminary version of loading interactions data from the Alliance
+  added pig to the list of processed species
+
 ver 1.0.4  Nov 27, 2018
   updated list of live databases processed by the pipeline
 

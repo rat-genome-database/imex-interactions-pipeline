@@ -3,16 +3,13 @@ package edu.mcw.rgd.pipelines.imexinteractions;
 import edu.mcw.rgd.dao.AbstractDAO;
 import edu.mcw.rgd.dao.impl.*;
 
-import edu.mcw.rgd.datamodel.Protein;
-import edu.mcw.rgd.datamodel.RgdId;
-import edu.mcw.rgd.datamodel.XdbId;
-import edu.mcw.rgd.datamodel.Interaction;
-import edu.mcw.rgd.datamodel.InteractionAttribute;
+import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.util.*;
+import java.util.Map;
 
 /**
  * Created by jthota on 3/11/2016.
@@ -58,13 +55,34 @@ public class Dao extends AbstractDAO{
     public int getProteinRgdid(String uniprotId) throws Exception {
 
         Integer rgdId = mapUniprotId2ProteinRgdId.get(uniprotId);
-        if( rgdId==null ) {
+        if( rgdId!=null ) {
+            return rgdId;
+        }
+
+        // uniprot accessions always start with a letter
+        char c = uniprotId.charAt(0);
+        if( Character.isLetter(c) ) {
             Protein protein = proteinDAO.getProteinByUniProtId(uniprotId);
             rgdId = protein == null ? 0 : protein.getRgdId();
             mapUniprotId2ProteinRgdId.put(uniprotId, rgdId);
+            return rgdId;
         }
+
+        // NCBI gene accessions from biogrid start with a number
+        List<Gene> genes = xdbDao.getActiveGenesByXdbId(XdbId.XDB_KEY_NCBI_GENE, uniprotId);
+        if( genes.isEmpty() ) {
+            rgdId = 0;
+        }
+        else if( genes.size()>1 ) {
+            System.out.println("multiple genes matching NCBI gene id "+uniprotId);
+            rgdId = 0;
+        } else {
+            rgdId = genes.get(0).getRgdId();
+        }
+        mapUniprotId2ProteinRgdId.put(uniprotId, rgdId);
         return rgdId;
     }
+
     Map<String,Integer> mapUniprotId2ProteinRgdId = new HashMap<>();
 
     /**

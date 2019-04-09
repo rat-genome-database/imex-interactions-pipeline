@@ -2,7 +2,7 @@
 
 <beans>
     <bean id="manager" class="edu.mcw.rgd.pipelines.imexinteractions.Manager" >
-        <property name="version" value="IMEXInteractionsPipeline v. 1.0.4 Nov 27, 2018" />
+        <property name="version" value="IMEXInteractionsPipeline v. 1.0.5 Apr 9, 2019" />
         <property name="supportedSpecies">
             <list>
                 <value>rat</value>
@@ -12,6 +12,7 @@
                 <value>chinchilla</value>
                 <value>bonobo</value>
                 <value>squirrel</value>
+                <value>pig</value>
             </list>
         </property>
     </bean>
