@@ -42,6 +42,7 @@
                 -->
             </list>
         </property>
+        <property name="maxRetryCount" value="10"/>
     </bean>
 
 </beans>

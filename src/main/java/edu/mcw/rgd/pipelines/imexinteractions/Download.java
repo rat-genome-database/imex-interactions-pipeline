@@ -20,6 +20,7 @@ public class Download {
     private String imexRegistryUrl;
     private int apiRequestsMade = 0;
     private int failedRequests = 0;
+    private int maxRetryCount;
 
     Logger log = Logger.getLogger("Failure");
 
@@ -44,37 +45,63 @@ public class Download {
         Map<String,Long> bytesReadForSpeciesMap = new HashMap<>();
 
         if( !getIdentifiers().isEmpty() ) {
-            System.out.println("No. OF IMEX DATABASES URLS: " + getIdentifiers().size());
-            for(String dbIdentifier: getIdentifiers()) {
-                System.out.println("DOWNLOADING FROM: " + dbIdentifier);
-                PsicquicClient client = new PsicquicClient(dbIdentifier.trim());
-                long totalBytesRead = 0;
-                for(String species: allSpecies){
-                    apiRequestsMade++;
-                    long bytesReadForSpecies = 0;
-                    String taxId = SpeciesType.getTaxonomicId(SpeciesType.parse(species))+"";
-                    try {
-                        final InputStream result = client.getByQuery("species:"+taxId);
-                        int wasRead;
-                        while ((wasRead = result.read(bytes, 0, bytes.length)) >= 0) {
-                            bytesReadForSpecies += wasRead;
-                            outputStream.write(bytes, 0, wasRead);
-                        }
-                        result.close();
-                    }catch(Exception e){
-                        log.info("WARNING! "+dbIdentifier + " REQUEST FAILED for "+species+": "+e.getMessage());
-                        failedRequests++;
-                    }
 
-                    Long totalBytesReadForSpecies = bytesReadForSpeciesMap.get(species);
-                    if( totalBytesReadForSpecies==null ) {
-                        totalBytesReadForSpecies = 0l;
-                    }
-                    bytesReadForSpeciesMap.put(species, totalBytesReadForSpecies+bytesReadForSpecies);
-                    totalBytesRead += bytesReadForSpecies;
+            System.out.println("No. OF IMEX DATABASES URLS: " + getIdentifiers().size());
+
+            // download code with retry:
+            //   it takes hours to download all the data
+            //   and it happens often that the downloaded data is partial
+            // therefore we want to perform a preset number of retries when the download fails
+            List<DownloadInfo> downloadList = new ArrayList<>();
+
+            for(String dbIdentifier: getIdentifiers()) {
+                for(String species: allSpecies){
+                    DownloadInfo di = new DownloadInfo();
+                    di.dbName = dbIdentifier.trim();
+                    di.speciesName = species;
+                    downloadList.add(di);
                 }
-                System.out.println("  bytes read " + Utils.formatThousands(totalBytesRead));
             }
+
+            long totalBytesRead = 0;
+            int retryCount = 0;
+            while( retryCount<=getMaxRetryCount() && !downloadList.isEmpty() ) {
+
+                Collections.shuffle(downloadList);
+                DownloadInfo di = downloadList.remove(0);
+
+                System.out.println("DOWNLOADING FROM: " + di.dbName+" for "+di.speciesName);
+                PsicquicClient client = new PsicquicClient(di.dbName);
+
+                apiRequestsMade++;
+                long bytesReadForSpecies = 0;
+                String taxId = SpeciesType.getTaxonomicId(SpeciesType.parse(di.speciesName))+"";
+                try {
+                    final InputStream result = client.getByQuery("species:"+taxId);
+                    int wasRead;
+                    while ((wasRead = result.read(bytes, 0, bytes.length)) >= 0) {
+                        bytesReadForSpecies += wasRead;
+                        outputStream.write(bytes, 0, wasRead);
+                    }
+                    result.close();
+                }catch(Exception e){
+                    log.info("WARNING! "+di.dbName + " REQUEST FAILED for "+di.speciesName+": "+e.getMessage());
+                    // retry it
+                    downloadList.add(di);
+                    retryCount++;
+                    log.info("   request will be retried; current download retry count: "+retryCount);
+                }
+
+                Long totalBytesReadForSpecies = bytesReadForSpeciesMap.get(di.speciesName);
+                if( totalBytesReadForSpecies==null ) {
+                    totalBytesReadForSpecies = 0l;
+                }
+                bytesReadForSpeciesMap.put(di.speciesName, totalBytesReadForSpecies+bytesReadForSpecies);
+                totalBytesRead += bytesReadForSpecies;
+            }
+            System.out.println("TOTAL BYTES READ " + Utils.formatThousands(totalBytesRead));
+
+            setFailedRequests(downloadList.size());
         }
         outputStream.close();
 
@@ -179,5 +206,18 @@ public class Download {
 
     public void setFailedRequests(int failedRequests) {
         this.failedRequests = failedRequests;
+    }
+
+    public void setMaxRetryCount(int maxRetryCount) {
+        this.maxRetryCount = maxRetryCount;
+    }
+
+    public int getMaxRetryCount() {
+        return maxRetryCount;
+    }
+
+    class DownloadInfo {
+        public String dbName;
+        public String speciesName;
     }
 }
