@@ -2,7 +2,7 @@
 
 <beans>
     <bean id="manager" class="edu.mcw.rgd.pipelines.imexinteractions.Manager" >
-        <property name="version" value="IMEXInteractionsPipeline v. 1.0.5 Apr 9, 2019" />
+        <property name="version" value="IMEXInteractionsPipeline v. 1.0.6 Apr 10, 2019" />
         <property name="supportedSpecies">
             <list>
                 <value>rat</value>

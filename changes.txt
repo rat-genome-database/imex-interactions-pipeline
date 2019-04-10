@@ -1,3 +1,8 @@
+ver 1.0.6  Apr 10, 2019
+  tuned up processing logic
+    incoming interactions are merged before loading for speedup and better reporting
+    stale data processing runs only after all IMEX API requests complete successfully
+
 ver 1.0.5  Apr 9, 2019
   added Jami parser -- for testing mostly
   added preliminary version of loading interactions data from the Alliance

@@ -55,7 +55,7 @@ public class Manager {
             case "-process_only":
                 setFilename(args[1]);
                 System.out.println("Processing the file " + filename + "...");
-                insertedRecordCount = process.processFile(filename);
+                insertedRecordCount = process.processFile(filename, false);
                 printInteractionCounts();
                 break;
 
@@ -64,7 +64,7 @@ public class Manager {
 
                 File file = new File(filename);
                 if(file.length()>0) {
-                    insertedRecordCount = process.processFile(filename);
+                    insertedRecordCount = process.processFile(filename, download.getFailedRequests()==0);
                     printInteractionCounts();
                 }
                 break;
@@ -99,6 +99,8 @@ public class Manager {
 
         System.out.println("DOWNLOADED TO A LOCAL FILE: " + filename);
         System.out.println("   ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));
+        System.out.println("   IMEX API REQUESTS MADE: "+ download.getApiRequestsMade());
+        System.out.println("      FAILED API REQUESTS: "+ download.getFailedRequests());
     }
 
     /**

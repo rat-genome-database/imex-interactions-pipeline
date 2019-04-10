@@ -18,6 +18,8 @@ import java.util.zip.GZIPOutputStream;
 public class Download {
     private List<String> identifiers;
     private String imexRegistryUrl;
+    private int apiRequestsMade = 0;
+    private int failedRequests = 0;
 
     Logger log = Logger.getLogger("Failure");
 
@@ -28,6 +30,7 @@ public class Download {
      * @throws Exception
      */
     public String download2File(List<String> allSpecies, String fileName) throws Exception {
+
 
         SimpleDateFormat date = new SimpleDateFormat("yyyyMMdd");
         String outfilename="data/Interactions_"+fileName + "_" + date.format(new Date()) + ".gz" ;
@@ -47,6 +50,7 @@ public class Download {
                 PsicquicClient client = new PsicquicClient(dbIdentifier.trim());
                 long totalBytesRead = 0;
                 for(String species: allSpecies){
+                    apiRequestsMade++;
                     long bytesReadForSpecies = 0;
                     String taxId = SpeciesType.getTaxonomicId(SpeciesType.parse(species))+"";
                     try {
@@ -58,7 +62,8 @@ public class Download {
                         }
                         result.close();
                     }catch(Exception e){
-                        log.info(dbIdentifier + "STATUS NOT AVAILABLE");
+                        log.info("WARNING! "+dbIdentifier + " REQUEST FAILED for "+species+": "+e.getMessage());
+                        failedRequests++;
                     }
 
                     Long totalBytesReadForSpecies = bytesReadForSpeciesMap.get(species);
@@ -158,5 +163,21 @@ public class Download {
 
     public String getImexRegistryUrl() {
         return imexRegistryUrl;
+    }
+
+    public int getApiRequestsMade() {
+        return apiRequestsMade;
+    }
+
+    public void setApiRequestsMade(int apiRequestsMade) {
+        this.apiRequestsMade = apiRequestsMade;
+    }
+
+    public int getFailedRequests() {
+        return failedRequests;
+    }
+
+    public void setFailedRequests(int failedRequests) {
+        this.failedRequests = failedRequests;
     }
 }

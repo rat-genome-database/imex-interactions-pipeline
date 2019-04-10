@@ -10,6 +10,7 @@ import org.apache.log4j.Logger;
 import java.io.File;
 import java.util.*;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by jthota on 3/11/2016.
@@ -88,16 +89,20 @@ public class Dao extends AbstractDAO{
     /**
      * Insert or Update the List of Protein Interactions
      * @param piList ProteinInteractionList
-     * @return
+     * @return count of interactions inserted into db
      * @throws Exception
      */
+    public int insertOrUpdate(Collection<Interaction> piList) throws Exception{
 
-    public int insertOrUpdate(List<Interaction> piList) throws Exception{
-        int count = 0;
-        for(Interaction pi:piList){
-           count += this.insertOrUpdate(pi);
-        }
-        return count;
+        AtomicInteger count = new AtomicInteger(0);
+        piList.parallelStream().forEach( pi -> {
+            try {
+                count.addAndGet(insertOrUpdate(pi));
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return count.intValue();
     }
 
     /**
