@@ -101,7 +101,7 @@ public class Parser {
 
         // dump protein pairs without match in RGD
         if( rgdIds1.isEmpty() || rgdIds2.isEmpty() ) {
-            log.info(p1 + " | " + p2);
+            log.debug(p1 + " | " + p2);
         }
 
         return iList;

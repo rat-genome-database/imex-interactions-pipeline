@@ -22,7 +22,7 @@ public class Download {
     private int failedRequests = 0;
     private int maxRetryCount;
 
-    Logger log = Logger.getLogger("Failure");
+    Logger log = Logger.getLogger("main");
 
     /**
      * DOWNLOADS INTERACTIONS OF ALL SPECIES TO A LOCAL FILE AND RETURNS FILE NAME.
@@ -46,7 +46,7 @@ public class Download {
 
         if( !getIdentifiers().isEmpty() ) {
 
-            System.out.println("No. OF IMEX DATABASES URLS: " + getIdentifiers().size());
+           log.info("No. OF IMEX DATABASES URLS: " + getIdentifiers().size());
 
             // download code with retry:
             //   it takes hours to download all the data
@@ -57,7 +57,7 @@ public class Download {
             for(String dbIdentifier: getIdentifiers()) {
                 for(String species: allSpecies){
                     DownloadInfo di = new DownloadInfo();
-                    di.dbName = dbIdentifier.trim();
+                    di.dbUri = dbIdentifier.trim();
                     di.speciesName = species;
                     downloadList.add(di);
                 }
@@ -70,8 +70,8 @@ public class Download {
                 Collections.shuffle(downloadList);
                 DownloadInfo di = downloadList.remove(0);
 
-                System.out.println("DOWNLOADING FROM: " + di.dbName+" for "+di.speciesName);
-                PsicquicClient client = new PsicquicClient(di.dbName);
+                log.info("DOWNLOADING FROM: " + di.dbUri +" for "+di.speciesName);
+                PsicquicClient client = new PsicquicClient(di.dbUri);
 
                 apiRequestsMade++;
                 long bytesReadForSpecies = 0;
@@ -85,29 +85,33 @@ public class Download {
                     }
                     result.close();
                 }catch(Exception e){
-                    log.info("WARNING! "+di.dbName + " REQUEST FAILED for "+di.speciesName+": "+e.getMessage());
+                    log.warn("WARNING! "+di.dbUri + " REQUEST FAILED for "+di.speciesName+": "+e.getMessage());
                     // retry it
                     downloadList.add(di);
                     retryCount++;
-                    log.info("   request will be retried; current download retry count: "+retryCount);
+                    log.warn("   request will be retried; current download retry count: "+retryCount);
                 }
 
-                Long totalBytesReadForSpecies = bytesReadForSpeciesMap.get(di.speciesName);
-                if( totalBytesReadForSpecies==null ) {
-                    totalBytesReadForSpecies = 0l;
+                log.info("   bytes read: " + bytesReadForSpecies+"      pending reqs: "+downloadList.size());
+                if( bytesReadForSpecies>0 ) {
+                    Long totalBytesReadForSpecies = bytesReadForSpeciesMap.get(di.speciesName);
+                    if (totalBytesReadForSpecies == null) {
+                        totalBytesReadForSpecies = 0l;
+                    }
+                    bytesReadForSpeciesMap.put(di.speciesName, totalBytesReadForSpecies + bytesReadForSpecies);
+                    totalBytesRead += bytesReadForSpecies;
                 }
-                bytesReadForSpeciesMap.put(di.speciesName, totalBytesReadForSpecies+bytesReadForSpecies);
-                totalBytesRead += bytesReadForSpecies;
             }
-            System.out.println("TOTAL BYTES READ " + Utils.formatThousands(totalBytesRead));
+            log.info("TOTAL BYTES READ " + Utils.formatThousands(totalBytesRead));
 
             setFailedRequests(downloadList.size());
         }
         outputStream.close();
 
-        System.out.println("BYTES READ FOR SPECIES");
+        log.info("");
+        log.info("BYTES READ FOR SPECIES");
         for( Map.Entry<String, Long> entry: bytesReadForSpeciesMap.entrySet() ) {
-            System.out.println("  "+entry.getKey()+": "+ Utils.formatThousands(entry.getValue()));
+            log.info("  "+entry.getKey()+": "+ Utils.formatThousands(entry.getValue()));
         }
 
         return outfilename;
@@ -168,11 +172,11 @@ public class Download {
         }
 
         if( !newImexDbUrls.isEmpty() ) {
-            System.out.println("NEW IMEX DB URLS: (unprocessed by the pipeline) !!!");
+            log.info("NEW IMEX DB URLS: (unprocessed by the pipeline) !!!");
             for( String newImexDbUrl: newImexDbUrls ) {
-                System.out.println("  " + newImexDbUrl);
+                log.info("  " + newImexDbUrl);
             }
-            System.out.println("===");
+            log.info("===");
         }
     }
 
@@ -217,7 +221,7 @@ public class Download {
     }
 
     class DownloadInfo {
-        public String dbName;
+        public String dbUri;
         public String speciesName;
     }
 }
