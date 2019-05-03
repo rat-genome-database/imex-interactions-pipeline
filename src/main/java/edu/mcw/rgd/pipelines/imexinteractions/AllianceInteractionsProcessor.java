@@ -4,6 +4,7 @@ import edu.mcw.rgd.dao.impl.InteractionAttributesDAO;
 import edu.mcw.rgd.dao.impl.InteractionsDAO;
 import edu.mcw.rgd.datamodel.Interaction;
 import edu.mcw.rgd.datamodel.InteractionAttribute;
+import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
 
 import java.io.BufferedReader;
@@ -11,7 +12,7 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.List;
 
 
@@ -23,60 +24,51 @@ public class AllianceInteractionsProcessor {
     Dao dao = new Dao();
     private InteractionsDAO idao= new InteractionsDAO();
     private InteractionAttributesDAO adao= new InteractionAttributesDAO();
-    int newAttrs = 0;
-    int sameAttrs = 0;
-    int newInt = 0;
-    int sameInt = 0;
     BufferedWriter newInter;
+    CounterPool counters = new CounterPool();
 
     public static void main(String[] args) throws Exception {
-        String fileName = "/tmp/Alliance_molecular_interactions_2.0.mitab";
-        AllianceInteractionsProcessor manager = new AllianceInteractionsProcessor();
-        manager.newInter = new BufferedWriter(new FileWriter("new_interactions_from_agr.txt"));
+        new AllianceInteractionsProcessor().run();
+    }
+
+    void run() throws IOException {
+        String fileName = "/tmp/Alliance_molecular_interactions_2.1.mitab";
+        newInter = new BufferedWriter(new FileWriter("new_interactions_from_agr.txt"));
 
         try {
             // split input file into multiple files: each 50000 rows
-            List<String> fileNames = splitInputFile(fileName, 21002);
-            Collections.shuffle(fileNames);
+            List<String> fileNames = splitInputFile(fileName, 1500000);
 
-            int flybaseLines = 0;
-            int wormbaseLines = 0;
-            int dataLines = 0;
-            for( String fname: fileNames ) {
-                System.out.println("FILE "+fname);
-
-                // many flybase lines cause parsing problems: filter them out from original file
-                String fileName2 = fname.replace(".mitab", "_lean.mitab");
-                String line;
-                BufferedWriter out = new BufferedWriter(new FileWriter(fileName2));
-                BufferedReader in = Utils.openReader(fname);
-                while ((line = in.readLine()) != null) {
-                    if (line.startsWith("wormbase:WB")) {
-                        wormbaseLines++;
-                    } else if (line.startsWith("flybase:FB")) {
-                        flybaseLines++;
-                    } else {
+            fileNames.parallelStream().forEach( fname -> {
+                try {
+                    // many flybase lines cause parsing problems: filter them out from original file
+                    String fileName2 = fname.replace(".mitab", "_lean.mitab");
+                    String line;
+                    BufferedWriter out = new BufferedWriter(new FileWriter(fileName2));
+                    BufferedReader in = Utils.openReader(fname);
+                    while ((line = in.readLine()) != null) {
                         out.write(line);
                         out.write("\n");
-                        if( !line.startsWith("#") ) {
-                            dataLines++;
+                        if (!line.startsWith("#")) {
+                            counters.increment("data lines");
                         }
                     }
-                }
-                in.close();
-                out.close();
-                System.out.println("lines filtered out (flybase) : " + flybaseLines);
-                System.out.println("lines filtered out (wormbase): " + wormbaseLines);
+                    in.close();
+                    out.close();
 
-                System.out.println("   data lines = "+dataLines );
-                manager.run(fileName2);
-                manager.newInter.flush();
-            }
+                    run(fileName2);
+                    newInter.flush();
+                } catch(Exception e) {
+                    throw new RuntimeException(e);
+                }
+            });
         } catch(Exception e) {
             e.printStackTrace();
         }
 
-        manager.newInter.close();
+        System.out.println(counters.dumpAlphabetically());
+
+        newInter.close();
     }
 
     static List<String> splitInputFile(String inputFile, int maxLinesPerFile) throws IOException {
@@ -84,7 +76,7 @@ public class AllianceInteractionsProcessor {
         // split input file into multiple files
         List<String> fileNames = new ArrayList<>();
 
-        String outFileNamePrefix = "/tmp/Alliance_molecular_interactions_2.0_part";
+        String outFileNamePrefix = "/tmp/Alliance_molecular_interactions_2.1_part";
         String line, header = "";
         BufferedReader in = Utils.openReader(inputFile);
         while( (line=in.readLine())!=null ) {
@@ -127,12 +119,15 @@ public class AllianceInteractionsProcessor {
 
         List<Interaction> piList = p.loadProteinInteractions(fileName);
 
-        for(Interaction pi: piList){
-            qc(pi);
-        }
+        Collection<Interaction> interactions = p.mergeDuplicateInteractions( piList );
 
-        System.out.println(fileName+" OK   INTERACTIONS (new="+newInt+", same="+sameInt+"),   ATTRS (new="+newAttrs+", same="+sameAttrs+")");
-        System.out.println();
+        interactions.parallelStream().forEach( pi -> {
+            try {
+                qc(pi);
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
     public void qc(Interaction pi) throws  Exception{
@@ -140,13 +135,14 @@ public class AllianceInteractionsProcessor {
 
         // interaction already in RGD
         if(key!=0){
-            sameInt++;
+            counters.increment("   SAME INTERACTIONS");
             pi.setInteractionKey(key);
             qcAttributes(pi);
         } else {
 
             // new interaction
-            newInt++;
+            counters.increment("   NEW INTERACTIONS");
+            counters.add("   NEW ATTRIBUTES NEW INTERACTIONS", pi.getInteractionAttributes().size());
             newInter.write("  RGD:" + pi.getRgdId1() + " - RGD:" + pi.getRgdId2() + "|" + pi.getInteractionType()+dumpAttrs(pi)+"\n");
         }
     }
@@ -172,9 +168,9 @@ public class AllianceInteractionsProcessor {
             a.setInteractionKey(key);
             int aKey = adao.getAttributeKey(a);
             if(aKey != 0) {
-                sameAttrs++;
+                counters.increment("   SAME ATTRIBUTES");
             } else {
-                newAttrs++;
+                counters.increment("   NEW ATTRIBUTES SAME INTERACTIONS");
             }
         }
     }

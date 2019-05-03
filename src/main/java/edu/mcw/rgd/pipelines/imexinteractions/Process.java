@@ -13,15 +13,18 @@ import java.util.*;
  * Created by jthota on 3/14/2016.
  */
 public class Process {
-    private int minFileSize = 27800;
     Dao dao = new Dao();
     private String deleteThreshold;
 
-    public int processFile(String fileName, boolean processStaleData) throws Exception {
+    public int processFiles(List<String> fileNames, boolean processStaleData) throws Exception {
         long time0 = System.currentTimeMillis();
 
         int initialAttrCount = dao.getAttributeCount();
-        List<Interaction> piList = loadProteinInteractions(fileName);
+
+        List<Interaction> piList = new ArrayList<>();
+        for( String fileName: fileNames ) {
+            piList.addAll( loadProteinInteractions(fileName) );
+        }
 
         Collection<Interaction> piUnique = mergeDuplicateInteractions(piList);
 
@@ -34,11 +37,8 @@ public class Process {
             // and we don't want to delete the just added interactions and attributes
             Date startDate = Utils.addDaysToDate(new Date(), -1);
 
-            int fileSize = dao.getFileSize(fileName);
-            if (fileSize >= getMinFileSize()) {
-                int deletedInteractionsCount = dao.deleteUnmodifiedInteractions(startDate);
-                System.out.println("Deleted Interaction Records Count: " + deletedInteractionsCount);
-            }
+            int deletedInteractionsCount = dao.deleteUnmodifiedInteractions(startDate);
+            System.out.println("Deleted Interaction Records Count: " + deletedInteractionsCount);
 
             int deletedInteractionAttributesCount = dao.deleteUnmodifiedInteractionAttributes(startDate, getDeleteThreshold(), initialAttrCount);
             System.out.println("Deleted Interaction Attributes Count: " + deletedInteractionAttributesCount);
@@ -49,6 +49,8 @@ public class Process {
     }
 
     List<Interaction> loadProteinInteractions(String fileName) throws Exception {
+
+        System.out.println("Loading "+fileName + " ...");
 
         BufferedReader br = Utils.openReader(fileName);
 
@@ -72,6 +74,7 @@ public class Process {
         System.out.println("Downloaded Record Count: " + count);
         System.out.println("Records with proteins having RGD_IDs:  " + piList1.size());
         System.out.println("Count of incoming unassigned pubmed values (duplicates possible): " + parser.countOfUnassignedPubmedValues);
+        System.out.println();
 
         return piList1;
     }
@@ -106,14 +109,6 @@ public class Process {
         System.out.println("   ORIGINAL INCOMING ATTR COUNT: "+origAttrCount);
         System.out.println("   MERGED   INCOMING ATTR COUNT: "+newAttrCount);
         return map.values();
-    }
-
-    public int getMinFileSize() {
-        return minFileSize;
-    }
-
-    public void setMinFileSize(int minFileSize) {
-        this.minFileSize = minFileSize;
     }
 
     public void setDeleteThreshold(String deleteThreshold) {

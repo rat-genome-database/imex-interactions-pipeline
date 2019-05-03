@@ -7,7 +7,6 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
-import java.io.File;
 import java.util.*;
 
 /**
@@ -15,7 +14,7 @@ import java.util.*;
  */
 public class Manager {
     private String version;
-    private String filename;
+    private List<String> filenames = new ArrayList<>();
     private List<String> supportedSpecies;
 
     Process process;
@@ -53,20 +52,17 @@ public class Manager {
                 break;
 
             case "-process_only":
-                setFilename(args[1]);
-                System.out.println("Processing the file " + filename + "...");
-                insertedRecordCount = process.processFile(filename, false);
+                filenames.add(args[1]);
+
+                insertedRecordCount = process.processFiles(filenames, false);
                 printInteractionCounts();
                 break;
 
             case "-download+process":
                 download(download, args[1].toLowerCase());
 
-                File file = new File(filename);
-                if(file.length()>0) {
-                    insertedRecordCount = process.processFile(filename, download.getFailedRequests()==0);
-                    printInteractionCounts();
-                }
+                insertedRecordCount = process.processFiles(filenames, download.getFailedRequests()==0);
+                printInteractionCounts();
                 break;
             default:
                 printUsageAndExit();
@@ -84,7 +80,7 @@ public class Manager {
         if( getSupportedSpecies().contains(species) ) {
             System.out.println("Downloading " + species + " protein Interactions data to a local file....");
             List<String> all = new ArrayList<>(Arrays.asList(species));
-            setFilename(download.download2File(all, species));
+            filenames.add(download.download2File(all, species));
         } else if( species.equals("all") ) {
             System.out.println("Downloading protein interactions data of BELOW SPECIES to a local file... ");
             for(String speciesName: getSupportedSpecies()){
@@ -92,12 +88,11 @@ public class Manager {
             }
             System.out.println();
 
-            setFilename(download.download2File(getSupportedSpecies(), "AllSPECIES"));
+            filenames.add(download.download2File(getSupportedSpecies(), "AllSPECIES"));
         } else {
             printUsageAndExit();
         }
 
-        System.out.println("DOWNLOADED TO A LOCAL FILE: " + filename);
         System.out.println("   ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));
         System.out.println("   IMEX API REQUESTS MADE: "+ download.getApiRequestsMade());
         System.out.println("      FAILED API REQUESTS: "+ download.getFailedRequests());
@@ -128,13 +123,6 @@ public class Manager {
         }
     }
 
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
     public void setVersion(String version) {
         this.version = version;
     }

@@ -1,3 +1,7 @@
+ver 1.0.7  May 3, 2019
+  turned on removal of stale interactions due to improvements in QC of incoming data
+  refactored logic to be able to process data from multiple incoming files
+
 ver 1.0.6  Apr 10, 2019
   tuned up processing logic
     incoming interactions are merged before loading for speedup and better reporting

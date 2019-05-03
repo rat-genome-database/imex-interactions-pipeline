@@ -7,7 +7,6 @@ import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.*;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -154,24 +153,23 @@ public class Dao extends AbstractDAO{
     public int deleteUnmodifiedInteractions(Date date) throws Exception {
         int int_count =0;
 
-        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-        List<Interaction> piList = idao.getInteractionsModifiedBeforeTimeStamp(sqlDate);
+        List<Interaction> piList = idao.getInteractionsModifiedBeforeTimeStamp(date);
 
         System.out.println("STALE INTERACTIONS COUNT: " + piList.size());
         logDeleted.info("STALE INTERACTIONS COUNT: " + piList.size());
 
         if (piList.size() != 0) {
-            logDeleted.info("DELETING UNMODIFIED INTERACTIONS (DRY MODE)...");
+            logDeleted.info("DELETING UNMODIFIED INTERACTIONS ...");
 
             for (Interaction pi : piList) {
 
                 //***********To delete unmodified records uncomment the below lines of code************//
-                // int key = pi.getInteractionKey();
-                //int_count = int_count + idao.deleteUnmodifiedInteractions(key);
+                int key = pi.getInteractionKey();
+                int_count += idao.deleteUnmodifiedInteractions(key);
 
                 logDeleted.info(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
             }
-            logDeleted.info("DELETION COMPLETE (DRY MODE)");
+            logDeleted.info("DELETION COMPLETE");
         }
         return int_count;
     }
@@ -228,13 +226,6 @@ public class Dao extends AbstractDAO{
         System.out.println(msg);
         logDeletedAttrs.info(msg);
         return deletedAttrCount;
-    }
-
-    public int getFileSize(String filename) throws  Exception{
-        File f = new File(filename);
-        long size = f.length();
-        int sizeInKB = (int) (size/1024);
-        return sizeInKB;
     }
 
     public int getInteractionCountForSpecies(int speciesTypeKey) throws Exception {
