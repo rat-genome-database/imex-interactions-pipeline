@@ -64,6 +64,14 @@ public class Manager {
                 insertedRecordCount = process.processFiles(filenames, download.getFailedRequests()==0);
                 printInteractionCounts();
                 break;
+
+            case "-process_for_date":
+                initFilesForDate(args[1]);
+
+                insertedRecordCount = process.processFiles(filenames, true);
+                printInteractionCounts();
+                break;
+
             default:
                 printUsageAndExit();
         }
@@ -73,6 +81,17 @@ public class Manager {
         System.out.println("PROCESS ELAPSED TIME: "+ Utils.formatElapsedTime(time0, time1));
         System.out.println("--- OK --- pipeline finished normally ---");
     }
+
+    void initFilesForDate(String fileDate) {
+        String file1 = "data/Interactions_AllSPECIES_"+fileDate+".gz";
+        filenames.add(file1);
+        System.out.println("added file "+file1);
+
+        String file2 = "data/"+fileDate+"_Alliance_interactions.mitab.gz";
+        filenames.add(file2);
+        System.out.println("added file "+file2);
+    }
+
 
     void download(Download download, String species) throws Exception {
         long time0 = System.currentTimeMillis();
