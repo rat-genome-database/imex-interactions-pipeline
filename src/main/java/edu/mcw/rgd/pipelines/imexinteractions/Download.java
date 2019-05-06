@@ -210,7 +210,7 @@ public class Download {
 
         System.out.println("Ungzipped to "+tarFileName);
 
-        String outFileName = "data/Alliance_interactions.mitab.gz";
+        String outFileName = localFile.replace(".tar.gz", ".mitab.gz");
         out = new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(outFileName)));
 
         try (TarArchiveInputStream fin = new TarArchiveInputStream(new FileInputStream(tarFileName))){
@@ -231,6 +231,7 @@ public class Download {
 
         new File(tarFileName).delete();
         System.out.println("Deleted "+tarFileName);
+
 
         return outFileName;
     }
