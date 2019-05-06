@@ -1,8 +1,8 @@
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
-
-<beans>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
     <bean id="manager" class="edu.mcw.rgd.pipelines.imexinteractions.Manager" >
-        <property name="version" value="IMEXInteractionsPipeline v. 1.0.7 May 3, 2019" />
+        <property name="version" value="IMEXInteractionsPipeline v. 1.1.0 May 6, 2019" />
         <property name="supportedSpecies">
             <list>
                 <value>rat</value>
@@ -42,6 +42,7 @@
             </list>
         </property>
         <property name="maxRetryCount" value="10"/>
+        <property name="agrUrl" value="https://download.alliancegenome.org/INT/Alliance_molecular_interactions.tar.gz"/>
     </bean>
 
 </beans>

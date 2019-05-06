@@ -89,6 +89,8 @@ public class Manager {
             System.out.println();
 
             filenames.add(download.download2File(getSupportedSpecies(), "AllSPECIES"));
+
+            filenames.add(download.downloadAgrFile());
         } else {
             printUsageAndExit();
         }

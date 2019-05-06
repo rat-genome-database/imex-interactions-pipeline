@@ -1,7 +1,10 @@
 package edu.mcw.rgd.pipelines.imexinteractions;
 
 import edu.mcw.rgd.datamodel.SpeciesType;
+import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -10,6 +13,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -23,6 +27,7 @@ public class Download {
     private int maxRetryCount;
 
     Logger log = Logger.getLogger("main");
+    private String agrUrl;
 
     /**
      * DOWNLOADS INTERACTIONS OF ALL SPECIES TO A LOCAL FILE AND RETURNS FILE NAME.
@@ -180,6 +185,53 @@ public class Download {
         }
     }
 
+    public String downloadAgrFile() throws Exception {
+        FileDownloader fd = new FileDownloader();
+        fd.setExternalFile(getAgrUrl());
+        fd.setLocalFile("data/Alliance_interactions.tar.gz");
+        fd.setPrependDateStamp(true);
+        String localFile = fd.downloadNew();
+
+        // expand tar file
+        String tarFileName = "data/Alliance_interactions.tar";
+        byte[] buffer = new byte[4096];
+
+        GZIPInputStream gZIPInputStream = new GZIPInputStream(new FileInputStream(localFile));
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tarFileName));
+
+        int bytes_read;
+        while ((bytes_read = gZIPInputStream.read(buffer)) > 0) {
+            out.write(buffer, 0, bytes_read);
+        }
+
+        gZIPInputStream.close();
+        out.close();
+
+
+        System.out.println("Ungzipped to "+tarFileName);
+
+        String outFileName = "data/Alliance_interactions.mitab";
+        out = new BufferedOutputStream(new FileOutputStream(outFileName));
+
+        try (TarArchiveInputStream fin = new TarArchiveInputStream(new FileInputStream(tarFileName))){
+            TarArchiveEntry entry;
+            while ((entry = fin.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                while ((bytes_read = fin.read(buffer)) > 0) {
+                    out.write(buffer, 0, bytes_read);
+                }
+                out.close();
+                break;
+            }
+        }
+
+        System.out.println("Untarred to "+outFileName);
+
+        return outFileName;
+    }
+
     public List<String> getIdentifiers() {
         return identifiers;
     }
@@ -218,6 +270,14 @@ public class Download {
 
     public int getMaxRetryCount() {
         return maxRetryCount;
+    }
+
+    public void setAgrUrl(String agrUrl) {
+        this.agrUrl = agrUrl;
+    }
+
+    public String getAgrUrl() {
+        return agrUrl;
     }
 
     class DownloadInfo {

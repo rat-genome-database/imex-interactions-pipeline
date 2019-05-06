@@ -1,3 +1,6 @@
+ver 1.1.0  May 6, 2019
+  added processing of interactions from AGR (for all species processing)
+
 ver 1.0.7  May 3, 2019
   turned on removal of stale interactions due to improvements in QC of incoming data
   refactored logic to be able to process data from multiple incoming files
