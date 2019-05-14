@@ -37,11 +37,11 @@ public class Process {
             // and we don't want to delete the just added interactions and attributes
             Date startDate = Utils.addDaysToDate(new Date(), -1);
 
-            int deletedInteractionsCount = dao.deleteUnmodifiedInteractions(startDate);
-            System.out.println("Deleted Interaction Records Count: " + deletedInteractionsCount);
-
             int deletedInteractionAttributesCount = dao.deleteUnmodifiedInteractionAttributes(startDate, getDeleteThreshold(), initialAttrCount);
             System.out.println("Deleted Interaction Attributes Count: " + deletedInteractionAttributesCount);
+
+            int deletedInteractionsCount = dao.deleteUnmodifiedInteractions(startDate);
+            System.out.println("Deleted Interaction Records Count: " + deletedInteractionsCount);
         }
 
         System.out.println("===PROCESSING ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));

@@ -5,13 +5,13 @@
 APPNAME=IMEXInteractionsPipeline
 APPDIR=/home/rgddata/pipelines/$APPNAME
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
-EMAIL_LIST=mtutaj@mcw.edu,jthota@mcw.edu
+EMAIL_LIST=mtutaj@mcw.edu
 if [ "$SERVER" = "REED" ]; then
   EMAIL_LIST=mtutaj@mcw.edu,jthota@mcw.edu,jdepons@mcw.edu
 fi
 
 cd $APPDIR
-java -Dspring.config=$APPDIR/../properties/default_db.xml \
+java -Dspring.config=$APPDIR/../properties/default_db2.xml \
     -Dlog4j.configuration=file://$APPDIR/properties/log4j.properties \
     -jar lib/$APPNAME.jar "$@" 2>&1 | tee run.log
 
