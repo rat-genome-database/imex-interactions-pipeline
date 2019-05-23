@@ -12,8 +12,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by jthota on 3/11/2016.
- * <p>
+ * @author jthota
+ * @since 3/11/2016
  *  A wrapper class to all the DAOs for database operations.
  */
 public class Dao extends AbstractDAO{
@@ -69,7 +69,7 @@ public class Dao extends AbstractDAO{
         }
 
         // NCBI gene accessions from biogrid start with a number
-        List<Gene> genes = xdbDao.getActiveGenesByXdbId(XdbId.XDB_KEY_NCBI_GENE, uniprotId);
+        List<Gene> genes = getActiveGenesByNcbiGeneId(uniprotId);
         if( genes.isEmpty() ) {
             rgdId = 0;
         }
@@ -84,6 +84,21 @@ public class Dao extends AbstractDAO{
     }
 
     Map<String,Integer> mapUniprotId2ProteinRgdId = new HashMap<>();
+
+    List<Gene> getActiveGenesByNcbiGeneId(String accId) throws Exception {
+        // NCBI gene accessions from biogrid start with a number
+        List<Gene> genes = xdbDao.getActiveGenesByXdbId(XdbId.XDB_KEY_NCBI_GENE, accId);
+
+        // exclude splices and alleles
+        Iterator<Gene> it = genes.iterator();
+        while( it.hasNext() ) {
+            Gene g = it.next();
+            if( g.isVariant() ) {
+                it.remove();
+            }
+        }
+        return genes;
+    }
 
     /**
      * Insert or Update the List of Protein Interactions

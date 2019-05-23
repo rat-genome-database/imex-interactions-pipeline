@@ -1,3 +1,6 @@
+ver 1.1.2  May 23, 2019
+  fixed matching of NCBI Gene ids for biogrid data
+
 ver 1.1.1  May 14, 2019
   fixed processing of stale interactions
     -- stale attributes must be deleted *before* stale interactions to avoid db constraint violations
