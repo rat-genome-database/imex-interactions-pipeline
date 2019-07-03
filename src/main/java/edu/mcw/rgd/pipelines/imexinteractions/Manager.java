@@ -7,18 +7,14 @@ import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
+import java.util.*;
 
 /**
  * Created by jthota on 2/25/2016.
  */
 public class Manager {
     private String version;
-    private String filename;
+    private List<String> filenames = new ArrayList<>();
     private List<String> supportedSpecies;
 
     Process process;
@@ -29,7 +25,6 @@ public class Manager {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception{
-
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         Manager manager = (Manager) (bf.getBean("manager"));
@@ -57,21 +52,26 @@ public class Manager {
                 break;
 
             case "-process_only":
-                setFilename(args[1]);
-                System.out.println("Processing the file " + filename + "...");
-                insertedRecordCount = process.processFile(filename);
+                filenames.add(args[1]);
+
+                insertedRecordCount = process.processFiles(filenames, false);
                 printInteractionCounts();
                 break;
 
             case "-download+process":
                 download(download, args[1].toLowerCase());
 
-                File file = new File(filename);
-                if(file.length()>0) {
-                    insertedRecordCount = process.processFile(filename);
-                    printInteractionCounts();
-                }
+                insertedRecordCount = process.processFiles(filenames, download.getFailedRequests()==0);
+                printInteractionCounts();
                 break;
+
+            case "-process_for_date":
+                initFilesForDate(args[1]);
+
+                insertedRecordCount = process.processFiles(filenames, true);
+                printInteractionCounts();
+                break;
+
             default:
                 printUsageAndExit();
         }
@@ -82,27 +82,41 @@ public class Manager {
         System.out.println("--- OK --- pipeline finished normally ---");
     }
 
+    void initFilesForDate(String fileDate) {
+        String file1 = "data/Interactions_AllSPECIES_"+fileDate+".gz";
+        filenames.add(file1);
+        System.out.println("added file "+file1);
+
+        String file2 = "data/"+fileDate+"_Alliance_interactions.mitab.gz";
+        filenames.add(file2);
+        System.out.println("added file "+file2);
+    }
+
+
     void download(Download download, String species) throws Exception {
         long time0 = System.currentTimeMillis();
 
         if( getSupportedSpecies().contains(species) ) {
             System.out.println("Downloading " + species + " protein Interactions data to a local file....");
             List<String> all = new ArrayList<>(Arrays.asList(species));
-            setFilename(download.download2File(all, species));
+            filenames.add(download.download2File(all, species));
         } else if( species.equals("all") ) {
+            filenames.add(download.downloadAgrFile());
+
             System.out.println("Downloading protein interactions data of BELOW SPECIES to a local file... ");
             for(String speciesName: getSupportedSpecies()){
                 System.out.print(" "+speciesName);
             }
             System.out.println();
 
-            setFilename(download.download2File(getSupportedSpecies(), "AllSPECIES"));
+            filenames.add(download.download2File(getSupportedSpecies(), "AllSPECIES"));
         } else {
             printUsageAndExit();
         }
 
-        System.out.println("DOWNLOADED TO A LOCAL FILE: " + filename);
         System.out.println("   ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));
+        System.out.println("   IMEX API REQUESTS MADE: "+ download.getApiRequestsMade());
+        System.out.println("      FAILED API REQUESTS: "+ download.getFailedRequests());
     }
 
     /**
@@ -130,13 +144,6 @@ public class Manager {
         }
     }
 
-    public String getFilename() {
-        return filename;
-    }
-
-    public void setFilename(String filename) {
-        this.filename = filename;
-    }
     public void setVersion(String version) {
         this.version = version;
     }

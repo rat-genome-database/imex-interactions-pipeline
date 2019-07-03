@@ -1,3 +1,31 @@
+ver 1.1.2  May 23, 2019
+  fixed matching of NCBI Gene ids for biogrid data
+
+ver 1.1.1  May 14, 2019
+  fixed processing of stale interactions
+    -- stale attributes must be deleted *before* stale interactions to avoid db constraint violations
+
+ver 1.1.0  May 6, 2019
+  added processing of interactions from AGR (for all species processing)
+
+ver 1.0.7  May 3, 2019
+  turned on removal of stale interactions due to improvements in QC of incoming data
+  refactored logic to be able to process data from multiple incoming files
+
+ver 1.0.6  Apr 10, 2019
+  tuned up processing logic
+    incoming interactions are merged before loading for speedup and better reporting
+    stale data processing runs only after all IMEX API requests complete successfully
+  implemented download retrials
+
+ver 1.0.5  Apr 9, 2019
+  added Jami parser -- for testing mostly
+  added preliminary version of loading interactions data from the Alliance
+  added pig to the list of processed species
+
+ver 1.0.4  Nov 27, 2018
+  updated list of live databases processed by the pipeline
+
 ver 1.0.3  Sep 26, 2018
   moved from subversion to github
 

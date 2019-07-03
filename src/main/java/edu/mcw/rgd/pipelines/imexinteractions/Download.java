@@ -1,7 +1,10 @@
 package edu.mcw.rgd.pipelines.imexinteractions;
 
 import edu.mcw.rgd.datamodel.SpeciesType;
+import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
+import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
+import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -10,6 +13,7 @@ import java.net.URL;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -18,8 +22,12 @@ import java.util.zip.GZIPOutputStream;
 public class Download {
     private List<String> identifiers;
     private String imexRegistryUrl;
+    private int apiRequestsMade = 0;
+    private int failedRequests = 0;
+    private int maxRetryCount;
 
-    Logger log = Logger.getLogger("Failure");
+    Logger log = Logger.getLogger("main");
+    private String agrUrl;
 
     /**
      * DOWNLOADS INTERACTIONS OF ALL SPECIES TO A LOCAL FILE AND RETURNS FILE NAME.
@@ -28,6 +36,7 @@ public class Download {
      * @throws Exception
      */
     public String download2File(List<String> allSpecies, String fileName) throws Exception {
+
 
         SimpleDateFormat date = new SimpleDateFormat("yyyyMMdd");
         String outfilename="data/Interactions_"+fileName + "_" + date.format(new Date()) + ".gz" ;
@@ -41,41 +50,73 @@ public class Download {
         Map<String,Long> bytesReadForSpeciesMap = new HashMap<>();
 
         if( !getIdentifiers().isEmpty() ) {
-            System.out.println("No. OF IMEX DATABASES URLS: " + getIdentifiers().size());
-            for(String dbIdentifier: getIdentifiers()) {
-                System.out.println("DOWNLOADING FROM: " + dbIdentifier);
-                PsicquicClient client = new PsicquicClient(dbIdentifier.trim());
-                long totalBytesRead = 0;
-                for(String species: allSpecies){
-                    long bytesReadForSpecies = 0;
-                    String taxId = SpeciesType.getTaxonomicId(SpeciesType.parse(species))+"";
-                    try {
-                        final InputStream result = client.getByQuery("species:"+taxId);
-                        int wasRead;
-                        while ((wasRead = result.read(bytes, 0, bytes.length)) >= 0) {
-                            bytesReadForSpecies += wasRead;
-                            outputStream.write(bytes, 0, wasRead);
-                        }
-                        result.close();
-                    }catch(Exception e){
-                        log.info(dbIdentifier + "STATUS NOT AVAILABLE");
-                    }
 
-                    Long totalBytesReadForSpecies = bytesReadForSpeciesMap.get(species);
-                    if( totalBytesReadForSpecies==null ) {
+           log.info("No. OF IMEX DATABASES URLS: " + getIdentifiers().size());
+
+            // download code with retry:
+            //   it takes hours to download all the data
+            //   and it happens often that the downloaded data is partial
+            // therefore we want to perform a preset number of retries when the download fails
+            List<DownloadInfo> downloadList = new ArrayList<>();
+
+            for(String dbIdentifier: getIdentifiers()) {
+                for(String species: allSpecies){
+                    DownloadInfo di = new DownloadInfo();
+                    di.dbUri = dbIdentifier.trim();
+                    di.speciesName = species;
+                    downloadList.add(di);
+                }
+            }
+
+            long totalBytesRead = 0;
+            int retryCount = 0;
+            while( retryCount<=getMaxRetryCount() && !downloadList.isEmpty() ) {
+
+                Collections.shuffle(downloadList);
+                DownloadInfo di = downloadList.remove(0);
+
+                log.info("DOWNLOADING FROM: " + di.dbUri +" for "+di.speciesName);
+                PsicquicClient client = new PsicquicClient(di.dbUri);
+
+                apiRequestsMade++;
+                long bytesReadForSpecies = 0;
+                String taxId = SpeciesType.getTaxonomicId(SpeciesType.parse(di.speciesName))+"";
+                try {
+                    final InputStream result = client.getByQuery("species:"+taxId);
+                    int wasRead;
+                    while ((wasRead = result.read(bytes, 0, bytes.length)) >= 0) {
+                        bytesReadForSpecies += wasRead;
+                        outputStream.write(bytes, 0, wasRead);
+                    }
+                    result.close();
+                }catch(Exception e){
+                    log.warn("WARNING! "+di.dbUri + " REQUEST FAILED for "+di.speciesName+": "+e.getMessage());
+                    // retry it
+                    downloadList.add(di);
+                    retryCount++;
+                    log.warn("   request will be retried; current download retry count: "+retryCount);
+                }
+
+                log.info("   bytes read: " + bytesReadForSpecies+"      pending reqs: "+downloadList.size());
+                if( bytesReadForSpecies>0 ) {
+                    Long totalBytesReadForSpecies = bytesReadForSpeciesMap.get(di.speciesName);
+                    if (totalBytesReadForSpecies == null) {
                         totalBytesReadForSpecies = 0l;
                     }
-                    bytesReadForSpeciesMap.put(species, totalBytesReadForSpecies+bytesReadForSpecies);
+                    bytesReadForSpeciesMap.put(di.speciesName, totalBytesReadForSpecies + bytesReadForSpecies);
                     totalBytesRead += bytesReadForSpecies;
                 }
-                System.out.println("  bytes read " + totalBytesRead);
             }
+            log.info("TOTAL BYTES READ " + Utils.formatThousands(totalBytesRead));
+
+            setFailedRequests(downloadList.size());
         }
         outputStream.close();
 
-        System.out.println("BYTES READ FOR SPECIES");
+        log.info("");
+        log.info("BYTES READ FOR SPECIES");
         for( Map.Entry<String, Long> entry: bytesReadForSpeciesMap.entrySet() ) {
-            System.out.println("  "+entry.getKey()+": "+ Utils.formatThousands(entry.getValue()));
+            log.info("  "+entry.getKey()+": "+ Utils.formatThousands(entry.getValue()));
         }
 
         return outfilename;
@@ -136,12 +177,63 @@ public class Download {
         }
 
         if( !newImexDbUrls.isEmpty() ) {
-            System.out.println("NEW IMEX DB URLS: (unprocessed by the pipeline) !!!");
+            log.info("NEW IMEX DB URLS: (unprocessed by the pipeline) !!!");
             for( String newImexDbUrl: newImexDbUrls ) {
-                System.out.println("  " + newImexDbUrl);
+                log.info("  " + newImexDbUrl);
             }
-            System.out.println("===");
+            log.info("===");
         }
+    }
+
+    public String downloadAgrFile() throws Exception {
+        FileDownloader fd = new FileDownloader();
+        fd.setExternalFile(getAgrUrl());
+        fd.setLocalFile("data/Alliance_interactions.tar.gz");
+        fd.setPrependDateStamp(true);
+        String localFile = fd.downloadNew();
+
+        // expand tar file
+        String tarFileName = "data/Alliance_interactions.tar";
+        byte[] buffer = new byte[4096];
+
+        GZIPInputStream gZIPInputStream = new GZIPInputStream(new FileInputStream(localFile));
+        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tarFileName));
+
+        int bytes_read;
+        while ((bytes_read = gZIPInputStream.read(buffer)) > 0) {
+            out.write(buffer, 0, bytes_read);
+        }
+
+        gZIPInputStream.close();
+        out.close();
+
+
+        System.out.println("Ungzipped to "+tarFileName);
+
+        String outFileName = localFile.replace(".tar.gz", ".mitab.gz");
+        out = new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(outFileName)));
+
+        try (TarArchiveInputStream fin = new TarArchiveInputStream(new FileInputStream(tarFileName))){
+            TarArchiveEntry entry;
+            while ((entry = fin.getNextTarEntry()) != null) {
+                if (entry.isDirectory()) {
+                    continue;
+                }
+                while ((bytes_read = fin.read(buffer)) > 0) {
+                    out.write(buffer, 0, bytes_read);
+                }
+                out.close();
+                break;
+            }
+        }
+
+        System.out.println("Untarred to "+outFileName);
+
+        new File(tarFileName).delete();
+        System.out.println("Deleted "+tarFileName);
+
+
+        return outFileName;
     }
 
     public List<String> getIdentifiers() {
@@ -158,5 +250,42 @@ public class Download {
 
     public String getImexRegistryUrl() {
         return imexRegistryUrl;
+    }
+
+    public int getApiRequestsMade() {
+        return apiRequestsMade;
+    }
+
+    public void setApiRequestsMade(int apiRequestsMade) {
+        this.apiRequestsMade = apiRequestsMade;
+    }
+
+    public int getFailedRequests() {
+        return failedRequests;
+    }
+
+    public void setFailedRequests(int failedRequests) {
+        this.failedRequests = failedRequests;
+    }
+
+    public void setMaxRetryCount(int maxRetryCount) {
+        this.maxRetryCount = maxRetryCount;
+    }
+
+    public int getMaxRetryCount() {
+        return maxRetryCount;
+    }
+
+    public void setAgrUrl(String agrUrl) {
+        this.agrUrl = agrUrl;
+    }
+
+    public String getAgrUrl() {
+        return agrUrl;
+    }
+
+    class DownloadInfo {
+        public String dbUri;
+        public String speciesName;
     }
 }

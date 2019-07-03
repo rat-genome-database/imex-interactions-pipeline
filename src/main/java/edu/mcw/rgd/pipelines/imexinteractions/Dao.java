@@ -3,20 +3,17 @@ package edu.mcw.rgd.pipelines.imexinteractions;
 import edu.mcw.rgd.dao.AbstractDAO;
 import edu.mcw.rgd.dao.impl.*;
 
-import edu.mcw.rgd.datamodel.Protein;
-import edu.mcw.rgd.datamodel.RgdId;
-import edu.mcw.rgd.datamodel.XdbId;
-import edu.mcw.rgd.datamodel.Interaction;
-import edu.mcw.rgd.datamodel.InteractionAttribute;
+import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import org.apache.log4j.Logger;
 
-import java.io.File;
 import java.util.*;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Created by jthota on 3/11/2016.
- * <p>
+ * @author jthota
+ * @since 3/11/2016
  *  A wrapper class to all the DAOs for database operations.
  */
 public class Dao extends AbstractDAO{
@@ -58,28 +55,68 @@ public class Dao extends AbstractDAO{
     public int getProteinRgdid(String uniprotId) throws Exception {
 
         Integer rgdId = mapUniprotId2ProteinRgdId.get(uniprotId);
-        if( rgdId==null ) {
+        if( rgdId!=null ) {
+            return rgdId;
+        }
+
+        // uniprot accessions always start with a letter
+        char c = uniprotId.charAt(0);
+        if( Character.isLetter(c) ) {
             Protein protein = proteinDAO.getProteinByUniProtId(uniprotId);
             rgdId = protein == null ? 0 : protein.getRgdId();
             mapUniprotId2ProteinRgdId.put(uniprotId, rgdId);
+            return rgdId;
         }
+
+        // NCBI gene accessions from biogrid start with a number
+        List<Gene> genes = getActiveGenesByNcbiGeneId(uniprotId);
+        if( genes.isEmpty() ) {
+            rgdId = 0;
+        }
+        else if( genes.size()>1 ) {
+            System.out.println("multiple genes matching NCBI gene id "+uniprotId);
+            rgdId = 0;
+        } else {
+            rgdId = genes.get(0).getRgdId();
+        }
+        mapUniprotId2ProteinRgdId.put(uniprotId, rgdId);
         return rgdId;
     }
+
     Map<String,Integer> mapUniprotId2ProteinRgdId = new HashMap<>();
+
+    List<Gene> getActiveGenesByNcbiGeneId(String accId) throws Exception {
+        // NCBI gene accessions from biogrid start with a number
+        List<Gene> genes = xdbDao.getActiveGenesByXdbId(XdbId.XDB_KEY_NCBI_GENE, accId);
+
+        // exclude splices and alleles
+        Iterator<Gene> it = genes.iterator();
+        while( it.hasNext() ) {
+            Gene g = it.next();
+            if( g.isVariant() ) {
+                it.remove();
+            }
+        }
+        return genes;
+    }
 
     /**
      * Insert or Update the List of Protein Interactions
      * @param piList ProteinInteractionList
-     * @return
+     * @return count of interactions inserted into db
      * @throws Exception
      */
+    public int insertOrUpdate(Collection<Interaction> piList) throws Exception{
 
-    public int insertOrUpdate(List<Interaction> piList) throws Exception{
-        int count = 0;
-        for(Interaction pi:piList){
-           count += this.insertOrUpdate(pi);
-        }
-        return count;
+        AtomicInteger count = new AtomicInteger(0);
+        piList.parallelStream().forEach( pi -> {
+            try {
+                count.addAndGet(insertOrUpdate(pi));
+            } catch(Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
+        return count.intValue();
     }
 
     /**
@@ -131,24 +168,23 @@ public class Dao extends AbstractDAO{
     public int deleteUnmodifiedInteractions(Date date) throws Exception {
         int int_count =0;
 
-        java.sql.Date sqlDate = new java.sql.Date(date.getTime());
-        List<Interaction> piList = idao.getInteractionsModifiedBeforeTimeStamp(sqlDate);
+        List<Interaction> piList = idao.getInteractionsModifiedBeforeTimeStamp(date);
 
         System.out.println("STALE INTERACTIONS COUNT: " + piList.size());
         logDeleted.info("STALE INTERACTIONS COUNT: " + piList.size());
 
         if (piList.size() != 0) {
-            logDeleted.info("DELETING UNMODIFIED INTERACTIONS (DRY MODE)...");
+            logDeleted.info("DELETING UNMODIFIED INTERACTIONS ...");
 
             for (Interaction pi : piList) {
 
                 //***********To delete unmodified records uncomment the below lines of code************//
-                // int key = pi.getInteractionKey();
-                //int_count = int_count + idao.deleteUnmodifiedInteractions(key);
+                int key = pi.getInteractionKey();
+                int_count += idao.deleteUnmodifiedInteractions(key);
 
                 logDeleted.info(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
             }
-            logDeleted.info("DELETION COMPLETE (DRY MODE)");
+            logDeleted.info("DELETION COMPLETE");
         }
         return int_count;
     }
@@ -205,13 +241,6 @@ public class Dao extends AbstractDAO{
         System.out.println(msg);
         logDeletedAttrs.info(msg);
         return deletedAttrCount;
-    }
-
-    public int getFileSize(String filename) throws  Exception{
-        File f = new File(filename);
-        long size = f.length();
-        int sizeInKB = (int) (size/1024);
-        return sizeInKB;
     }
 
     public int getInteractionCountForSpecies(int speciesTypeKey) throws Exception {

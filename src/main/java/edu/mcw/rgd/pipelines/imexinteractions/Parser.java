@@ -102,7 +102,7 @@ public class Parser {
 
         // dump protein pairs without match in RGD
         if( rgdIds1.isEmpty() || rgdIds2.isEmpty() ) {
-            log.info(p1 + " | " + p2);
+            log.debug(p1 + " | " + p2);
         }
 
         return iList;
@@ -151,11 +151,14 @@ public class Parser {
 
         for( CrossReference intAc: (List<CrossReference>) bi.getInteractionAcs() ){
             InteractionAttribute a= new InteractionAttribute();
-            if(intAc.getDatabase().toLowerCase().equals("imex")){
-                String name = "interaction_ac";
-                String value = intAc.getIdentifier();
-                a.setAttributeName(name);
-                a.setAttributeValue(value);
+            if( intAc.getDatabase().equalsIgnoreCase("imex") ){
+                a.setAttributeName("interaction_ac");
+                a.setAttributeValue(intAc.getIdentifier());
+                aList.add(a);
+            }
+            else if( intAc.getDatabase().equalsIgnoreCase("biogrid") ){
+                a.setAttributeName("interaction_ac");
+                a.setAttributeValue("biogrid:"+intAc.getIdentifier());
                 aList.add(a);
             }
         }

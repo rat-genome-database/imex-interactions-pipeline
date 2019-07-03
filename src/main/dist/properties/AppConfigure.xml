@@ -1,8 +1,8 @@
-<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
-
-<beans>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
     <bean id="manager" class="edu.mcw.rgd.pipelines.imexinteractions.Manager" >
-        <property name="version" value="IMEXInteractionsPipeline v. 1.0.3 Sep 26, 2018" />
+        <property name="version" value="IMEXInteractionsPipeline v. 1.1.2 May 23, 2019" />
         <property name="supportedSpecies">
             <list>
                 <value>rat</value>
@@ -12,12 +12,12 @@
                 <value>chinchilla</value>
                 <value>bonobo</value>
                 <value>squirrel</value>
+                <value>pig</value>
             </list>
         </property>
     </bean>
 
     <bean id="process" class="edu.mcw.rgd.pipelines.imexinteractions.Process">
-        <property name="minFileSize" value="27800"/>
         <property name="deleteThreshold" value="5%"/>
     </bean>
 
@@ -25,19 +25,24 @@
         <property name="imexRegistryUrl" value="http://www.ebi.ac.uk/Tools/webservices/psicquic/registry/registry?action=Active&amp;tags=imex%20curation&amp;restricted=n"/>
         <property name="identifiers">
             <list>
-                <value>http://imex.mbi.ucla.edu/psicquic-ws/webservices/current/search/</value>
-                <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/innatedb/webservices/current/search/</value>
-                <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/i2d/webservices/current/search/</value>
+                <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/imex/webservices/current/search/</value>
                 <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/intact/webservices/current/search/</value>
                 <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/mint/webservices/current/search/</value>
                 <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/mpidb/webservices/current/search/</value>
-                <value>http://matrixdb.ibcp.fr:8080/psicquic/webservices/current/search/</value>
-                <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/molcon/webservices/current/search/</value>
+                <value>http://matrixdb.univ-lyon1.fr:8080/psicquic/webservices/current/search/</value>
                 <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/mbinfo/webservices/current/search/</value>
                 <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/uniprot/webservices/current/search/</value>
                 <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/bhf-ucl/webservices/current/search/</value>
+
+                <!-- databases no longer available since many months, as of Nov 2018
+                <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/innatedb/webservices/current/search/</value>
+                <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/i2d/webservices/current/search/</value>
+                <value>http://www.ebi.ac.uk/Tools/webservices/psicquic/molcon/webservices/current/search/</value>
+                -->
             </list>
         </property>
+        <property name="maxRetryCount" value="10"/>
+        <property name="agrUrl" value="https://download.alliancegenome.org/INT/Alliance_molecular_interactions.tar.gz"/>
     </bean>
 
 </beans>
