@@ -4,6 +4,7 @@ import edu.mcw.rgd.datamodel.Interaction;
 import edu.mcw.rgd.datamodel.InteractionAttribute;
 
 import psidev.psi.mi.tab.model.BinaryInteraction;
+import psidev.psi.mi.tab.model.Confidence;
 import psidev.psi.mi.tab.model.CrossReference;
 
 import org.apache.log4j.Logger;
@@ -115,7 +116,17 @@ public class Parser {
      */
     public List<InteractionAttribute> parseAttributes(BinaryInteraction bi) {
         List<InteractionAttribute> aList = new ArrayList<>();
-
+        for(Confidence c: (List<Confidence>) bi.getConfidenceValues()){
+            String name=c.getType();
+            String value=c.getValue().toString();
+            if(value.length()<100) {
+                InteractionAttribute a = new InteractionAttribute();
+                a.setAttributeName(name);
+                a.setAttributeValue(value);
+                System.out.println(c.getText() + "\t" + c.getValue() + "\t" + c.getType());
+                aList.add(a);
+            }
+        }
         for (CrossReference p: (List<CrossReference>)bi.getPublications() ) {
             String name = p.getDatabase();
             String value = p.getIdentifier();
