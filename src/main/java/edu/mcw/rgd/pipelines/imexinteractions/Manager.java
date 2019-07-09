@@ -116,7 +116,12 @@ public class Manager {
 
         System.out.println("   ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));
         System.out.println("   IMEX API REQUESTS MADE: "+ download.getApiRequestsMade());
-        System.out.println("      FAILED API REQUESTS: "+ download.getFailedRequests());
+        if( download.getRetryCount()!=0 ) {
+            System.out.println("      RETRIED API REQUESTS: " + download.getRetryCount());
+        }
+        if( download.getFailedRequests()!=0 ) {
+            System.out.println("      FAILED API REQUESTS: " + download.getFailedRequests());
+        }
     }
 
     /**

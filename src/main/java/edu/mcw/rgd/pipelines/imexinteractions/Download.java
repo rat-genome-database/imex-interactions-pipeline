@@ -25,6 +25,7 @@ public class Download {
     private int apiRequestsMade = 0;
     private int failedRequests = 0;
     private int maxRetryCount;
+    private int retryCount = 0;
 
     Logger log = Logger.getLogger("main");
     private String agrUrl;
@@ -110,6 +111,7 @@ public class Download {
             log.info("TOTAL BYTES READ " + Utils.formatThousands(totalBytesRead));
 
             setFailedRequests(downloadList.size());
+            setRetryCount(retryCount);
         }
         outputStream.close();
 
@@ -282,6 +284,14 @@ public class Download {
 
     public String getAgrUrl() {
         return agrUrl;
+    }
+
+    public int getRetryCount() {
+        return retryCount;
+    }
+
+    public void setRetryCount(int retryCount) {
+        this.retryCount = retryCount;
     }
 
     class DownloadInfo {
