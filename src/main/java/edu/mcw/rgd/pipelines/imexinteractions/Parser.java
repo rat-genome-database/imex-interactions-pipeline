@@ -123,8 +123,10 @@ public class Parser {
                 InteractionAttribute a = new InteractionAttribute();
                 a.setAttributeName(name);
                 a.setAttributeValue(value);
-                System.out.println(c.getText() + "\t" + c.getValue() + "\t" + c.getType());
                 aList.add(a);
+
+                // mtutaj: this must be commented out, because on PROD it produces so much output that the pipeline summary email cannot be sent
+                // System.out.println(c.getText() + "\t" + c.getValue() + "\t" + c.getType());
             }
         }
         for (CrossReference p: (List<CrossReference>)bi.getPublications() ) {
