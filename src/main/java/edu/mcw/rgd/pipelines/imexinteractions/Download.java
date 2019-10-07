@@ -69,12 +69,16 @@ public class Download {
                 }
             }
 
+            final String outTmpFileName = "data/tmp.gz";
             long totalBytesRead = 0;
             int retryCount = 0;
             while( retryCount<=getMaxRetryCount() && !downloadList.isEmpty() ) {
 
                 Collections.shuffle(downloadList);
                 DownloadInfo di = downloadList.remove(0);
+
+                // first download everything to a temporary file
+                OutputStream outputStreamTmp = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(outTmpFileName)));
 
                 log.info("DOWNLOADING FROM: " + di.dbUri +" for "+di.speciesName);
                 PsicquicClient client = new PsicquicClient(di.dbUri);
@@ -86,16 +90,26 @@ public class Download {
                     final InputStream result = client.getByQuery("species:"+taxId);
                     int wasRead;
                     while ((wasRead = result.read(bytes, 0, bytes.length)) >= 0) {
-                        bytesReadForSpecies += wasRead;
-                        outputStream.write(bytes, 0, wasRead);
+                        outputStreamTmp.write(bytes, 0, wasRead);
                     }
                     result.close();
+
+                    // incoming request file was fully downloaded to tmp file -- copy this tmp file to the main output file
+                    outputStreamTmp.close();
+
+                    try( InputStream in = new GZIPInputStream(new BufferedInputStream(new FileInputStream(outTmpFileName))) ) {
+                        while ((wasRead = in.read(bytes, 0, bytes.length)) >= 0) {
+                            bytesReadForSpecies += wasRead;
+                            outputStream.write(bytes, 0, wasRead);
+                        }
+                    }
                 }catch(Exception e){
                     log.warn("WARNING! "+di.dbUri + " REQUEST FAILED for "+di.speciesName+": "+e.getMessage());
                     // retry it
                     downloadList.add(di);
                     retryCount++;
                     log.warn("   request will be retried; current download retry count: "+retryCount);
+                    outputStreamTmp.close(); // most likely partially downloaded file
                 }
 
                 log.info("   bytes read: " + bytesReadForSpecies+"      pending reqs: "+downloadList.size());
