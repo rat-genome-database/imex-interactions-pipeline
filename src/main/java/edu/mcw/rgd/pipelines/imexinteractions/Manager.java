@@ -101,7 +101,7 @@ public class Manager {
             List<String> all = new ArrayList<>(Arrays.asList(species));
             filenames.add(download.download2File(all, species));
         } else if( species.equals("all") ) {
-            filenames.add(download.downloadAgrFile());
+            filenames.addAll(download.downloadAgrFiles());
 
             System.out.println("Downloading protein interactions data of BELOW SPECIES to a local file... ");
             for(String speciesName: getSupportedSpecies()){

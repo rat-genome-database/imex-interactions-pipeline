@@ -1,3 +1,6 @@
+Jun 04, 2021
+  agr source: fixed download url for molecular interactions file; added download of genetic interactions file
+
 May 10, 2020
   updated jar dependencies
 

@@ -3,8 +3,6 @@ package edu.mcw.rgd.pipelines.imexinteractions;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.log4j.Logger;
 
 import java.io.*;
@@ -29,6 +27,8 @@ public class Download {
 
     Logger log = Logger.getLogger("main");
     private String agrUrl;
+    private String agrGeneticInteractionsUrl;
+    private String agrMolecularInteractionsUrl;
 
     /**
      * DOWNLOADS INTERACTIONS OF ALL SPECIES TO A LOCAL FILE AND RETURNS FILE NAME.
@@ -201,6 +201,26 @@ public class Download {
         }
     }
 
+    public List<String> downloadAgrFiles() throws Exception {
+        List<String> downloadedFiles = new ArrayList<>();
+
+        FileDownloader fd = new FileDownloader();
+        fd.setExternalFile(getAgrMolecularInteractionsUrl());
+        fd.setLocalFile("data/AGR_molecular_interactions.mitab.gz");
+        fd.setPrependDateStamp(true);
+        String localFile = fd.downloadNew();
+        downloadedFiles.add(localFile);
+
+        fd.setExternalFile(getAgrGeneticInteractionsUrl());
+        fd.setLocalFile("data/AGR_genetic_interactions.mitab.gz");
+        fd.setPrependDateStamp(true);
+        localFile = fd.downloadNew();
+        downloadedFiles.add(localFile);
+
+        return downloadedFiles;
+    }
+
+    /* old code to download and decompress tar gzipped source file
     public String downloadAgrFile() throws Exception {
         FileDownloader fd = new FileDownloader();
         fd.setExternalFile(getAgrUrl());
@@ -251,6 +271,7 @@ public class Download {
 
         return outFileName;
     }
+    */
 
     public List<String> getIdentifiers() {
         return identifiers;
@@ -298,6 +319,22 @@ public class Download {
 
     public String getAgrUrl() {
         return agrUrl;
+    }
+
+    public String getAgrGeneticInteractionsUrl() {
+        return agrGeneticInteractionsUrl;
+    }
+
+    public void setAgrGeneticInteractionsUrl(String agrGeneticInteractionsUrl) {
+        this.agrGeneticInteractionsUrl = agrGeneticInteractionsUrl;
+    }
+
+    public String getAgrMolecularInteractionsUrl() {
+        return agrMolecularInteractionsUrl;
+    }
+
+    public void setAgrMolecularInteractionsUrl(String agrMolecularInteractionsUrl) {
+        this.agrMolecularInteractionsUrl = agrMolecularInteractionsUrl;
     }
 
     public int getRetryCount() {
