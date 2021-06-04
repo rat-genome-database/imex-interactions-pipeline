@@ -38,9 +38,13 @@ public class Download {
      */
     public String download2File(List<String> allSpecies, String fileName) throws Exception {
 
-
         SimpleDateFormat date = new SimpleDateFormat("yyyyMMdd");
         String outfilename="data/Interactions_"+fileName + "_" + date.format(new Date()) + ".gz" ;
+
+        if( new File(outfilename).exists() ) {
+            log.info("DOWNLOAD: reusing existing file: "+outfilename);
+            return outfilename;
+        }
 
         OutputStream outputStream = new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(outfilename)));
         byte[] bytes = new byte[4096];
