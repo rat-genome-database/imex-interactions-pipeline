@@ -32,8 +32,8 @@ dependencies {
 
     compile 'log4j:log4j:1.2.17'
     compile 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
-    compile 'org.springframework:spring-beans:5.2.0.RELEASE'
-    compile 'org.springframework:spring-jdbc:5.2.0.RELEASE'
+    compile 'org.springframework:spring-beans:5.2.1.RELEASE'
+    compile 'org.springframework:spring-jdbc:5.2.1.RELEASE'
 
     // psicquic simple client
     //compile 'org.hupo.psi.mi.psicquic:psicquic-simple-client:1.4.0'  // this does not work

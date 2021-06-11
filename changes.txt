@@ -1,3 +1,7 @@
+Jun 11, 2021
+  agr source: current files from AGR are violating mitab spec;
+      as tmp workaround, use the latest downloaded AGR file in mitab format
+
 Jun 04, 2021
   agr source: fixed download url for molecular interactions file; added download of genetic interactions file
 

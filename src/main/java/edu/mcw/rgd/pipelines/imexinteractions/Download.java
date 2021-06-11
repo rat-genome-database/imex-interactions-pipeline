@@ -208,18 +208,44 @@ public class Download {
     public List<String> downloadAgrFiles() throws Exception {
         List<String> downloadedFiles = new ArrayList<>();
 
-        FileDownloader fd = new FileDownloader();
-        fd.setExternalFile(getAgrMolecularInteractionsUrl());
-        fd.setLocalFile("data/AGR_molecular_interactions.mitab.gz");
-        fd.setPrependDateStamp(true);
-        String localFile = fd.downloadNew();
-        downloadedFiles.add(localFile);
+        if( false ) {
+            // this will be the code to download molecular and genetic interactions from AGR, when the file will be fixed
+            FileDownloader fd = new FileDownloader();
+            fd.setExternalFile(getAgrMolecularInteractionsUrl());
+            fd.setLocalFile("data/AGR_molecular_interactions.mitab.gz");
+            fd.setPrependDateStamp(true);
+            String localFile = fd.downloadNew();
+            downloadedFiles.add(localFile);
 
-        fd.setExternalFile(getAgrGeneticInteractionsUrl());
-        fd.setLocalFile("data/AGR_genetic_interactions.mitab.gz");
-        fd.setPrependDateStamp(true);
-        localFile = fd.downloadNew();
-        downloadedFiles.add(localFile);
+            fd.setExternalFile(getAgrGeneticInteractionsUrl());
+            fd.setLocalFile("data/AGR_genetic_interactions.mitab.gz");
+            fd.setPrependDateStamp(true);
+            localFile = fd.downloadNew();
+            downloadedFiles.add(localFile);
+        } else {
+            // temporary workaround: pick the latest Alliance mitab file among the downloaded files
+
+            // filter to get all mitab files, f.e. 20210518_Alliance_interactions.mitab.gz
+            FilenameFilter filter = (dir, name) -> {
+                if( name.endsWith("_Alliance_interactions.mitab.gz") ) {
+                    return true;
+                } else {
+                    return false;
+                }
+            };
+            //List of all the text files
+            File dir = new File("data");
+            Set<String> files = new TreeSet<>(); // sort retrieved file names alphabetically
+            for( String fileName : dir.list(filter) ) {
+                files.add(fileName);
+            }
+            // the last file name is the one we seek
+            if( !files.isEmpty() ) {
+                Object[] fileArray = files.toArray();
+                String fileName = fileArray[fileArray.length-1].toString();
+                downloadedFiles.add("data/"+fileName);
+            }
+        }
 
         return downloadedFiles;
     }
