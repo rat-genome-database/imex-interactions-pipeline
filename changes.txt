@@ -1,3 +1,6 @@
+Jan 13, 2022
+  updated log4j to avoid zero day exploit
+
 Jun 11, 2021
   agr source: current files from AGR are violating mitab spec;
       as tmp workaround, use the latest downloaded AGR file in mitab format

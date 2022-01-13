@@ -3,11 +3,12 @@ package edu.mcw.rgd.pipelines.imexinteractions;
 import edu.mcw.rgd.datamodel.Interaction;
 import edu.mcw.rgd.datamodel.InteractionAttribute;
 
+import org.apache.logging.log4j.LogManager;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 import psidev.psi.mi.tab.model.Confidence;
 import psidev.psi.mi.tab.model.CrossReference;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import java.util.*;
 
 /**
@@ -15,7 +16,7 @@ import java.util.*;
  */
 public class Parser {
 
-    Logger log = Logger.getLogger("main");
+    Logger log = LogManager.getLogger("main");
     Dao dao = new Dao();
     int countOfUnassignedPubmedValues = 0;
 

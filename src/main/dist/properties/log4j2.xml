@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+
+        <RollingFile name="core" append="true" fileName="logs/core.log" filePattern="logs/core.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/><!-- 1 month roll over -->
+            </Policies>
+        </RollingFile>
+        <RollingFile name="status" append="true" fileName="logs/status.log" filePattern="logs/status.log.%d{yyyy-MM}">
+            <PatternLayout pattern="%d %p [%c] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <File name="summary" append="false" fileName="logs/summary.log">
+            <ThresholdFilter level="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
+        </File>
+
+        <RollingFile name="main" append="true" fileName="logs/main.log" filePattern="logs/main.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="modified" append="true" fileName="logs/modified.log" filePattern="logs/modified.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="deleted" append="true" fileName="logs/deleted.log" filePattern="logs/deleted.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="inserted" append="true" fileName="logs/inserted.log" filePattern="logs/inserted.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="interactionType" append="true" fileName="logs/interactionType.log" filePattern="logs/interactionType.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="deletedAttrs" append="true" fileName="logs/deletedAttrs.log" filePattern="logs/deletedAttrs.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+        <RollingFile name="download" append="true" fileName="logs/download.log" filePattern="logs/download.log.%d{yyyy-MM}">
+            <PatternLayout pattern="[%d] - %m%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy interval="1"/>
+            </Policies>
+        </RollingFile>
+    </Appenders>
+
+    <Loggers>
+        <Root level="INFO">
+            <AppenderRef ref="Console"/>
+        </Root>
+        <Logger name="status" level="debug" additivity="false">
+            <AppenderRef ref="core"/>
+            <AppenderRef ref="status" level="info"/>
+            <AppenderRef ref="summary" level="info"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+
+        <Logger name="main" level="debug" additivity="false">
+            <AppenderRef ref="main"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="modified" level="debug" additivity="false">
+            <AppenderRef ref="modified"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="deleted" level="debug" additivity="false">
+            <AppenderRef ref="deleted"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="inserted" level="debug" additivity="false">
+            <AppenderRef ref="inserted"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="interactionType" level="debug" additivity="false">
+            <AppenderRef ref="interactionType"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="deletedAttrs" level="debug" additivity="false">
+            <AppenderRef ref="deletedAttrs"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+        <Logger name="download" level="debug" additivity="false">
+            <AppenderRef ref="download"/>
+            <AppenderRef ref="Console" level="info"/>
+        </Logger>
+    </Loggers>
+</Configuration>

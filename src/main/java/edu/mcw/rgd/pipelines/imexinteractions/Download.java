@@ -3,7 +3,8 @@ package edu.mcw.rgd.pipelines.imexinteractions;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.FileDownloader;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -25,7 +26,9 @@ public class Download {
     private int maxRetryCount;
     private int retryCount = 0;
 
-    Logger log = Logger.getLogger("main");
+    Logger log = LogManager.getLogger("main");
+    Logger logDownload = LogManager.getLogger("download");
+
     private String agrUrl;
     private String agrGeneticInteractionsUrl;
     private String agrMolecularInteractionsUrl;
@@ -43,6 +46,7 @@ public class Download {
 
         if( new File(outfilename).exists() ) {
             log.info("DOWNLOAD: reusing existing file: "+outfilename);
+            logDownload.info("DOWNLOAD: reusing existing file: "+outfilename);
             return outfilename;
         }
 
@@ -249,59 +253,6 @@ public class Download {
 
         return downloadedFiles;
     }
-
-    /* old code to download and decompress tar gzipped source file
-    public String downloadAgrFile() throws Exception {
-        FileDownloader fd = new FileDownloader();
-        fd.setExternalFile(getAgrUrl());
-        fd.setLocalFile("data/Alliance_interactions.tar.gz");
-        fd.setPrependDateStamp(true);
-        String localFile = fd.downloadNew();
-
-        // expand tar file
-        String tarFileName = "data/Alliance_interactions.tar";
-        byte[] buffer = new byte[4096];
-
-        GZIPInputStream gZIPInputStream = new GZIPInputStream(new FileInputStream(localFile));
-        BufferedOutputStream out = new BufferedOutputStream(new FileOutputStream(tarFileName));
-
-        int bytes_read;
-        while ((bytes_read = gZIPInputStream.read(buffer)) > 0) {
-            out.write(buffer, 0, bytes_read);
-        }
-
-        gZIPInputStream.close();
-        out.close();
-
-
-        System.out.println("Ungzipped to "+tarFileName);
-
-        String outFileName = localFile.replace(".tar.gz", ".mitab.gz");
-        out = new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(outFileName)));
-
-        try (TarArchiveInputStream fin = new TarArchiveInputStream(new FileInputStream(tarFileName))){
-            TarArchiveEntry entry;
-            while ((entry = fin.getNextTarEntry()) != null) {
-                if (entry.isDirectory()) {
-                    continue;
-                }
-                while ((bytes_read = fin.read(buffer)) > 0) {
-                    out.write(buffer, 0, bytes_read);
-                }
-                out.close();
-                break;
-            }
-        }
-
-        System.out.println("Untarred to "+outFileName);
-
-        new File(tarFileName).delete();
-        System.out.println("Deleted "+tarFileName);
-
-
-        return outFileName;
-    }
-    */
 
     public List<String> getIdentifiers() {
         return identifiers;

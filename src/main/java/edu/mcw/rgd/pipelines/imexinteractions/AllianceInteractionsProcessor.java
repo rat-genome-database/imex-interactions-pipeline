@@ -21,7 +21,6 @@ import java.util.List;
  */
 public class AllianceInteractionsProcessor {
 
-    Dao dao = new Dao();
     private InteractionsDAO idao= new InteractionsDAO();
     private InteractionAttributesDAO adao= new InteractionAttributesDAO();
     BufferedWriter newInter;
@@ -33,7 +32,7 @@ public class AllianceInteractionsProcessor {
 
     void run() throws IOException {
         String fileName = "/tmp/Alliance_molecular_interactions_2.1.mitab";
-        newInter = new BufferedWriter(new FileWriter("new_interactions_from_agr.txt"));
+        newInter = Utils.openWriter("new_interactions_from_agr.txt");
 
         try {
             // split input file into multiple files: each 50000 rows

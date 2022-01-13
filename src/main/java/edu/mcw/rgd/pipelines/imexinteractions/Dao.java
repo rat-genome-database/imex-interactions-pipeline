@@ -5,7 +5,8 @@ import edu.mcw.rgd.dao.impl.*;
 
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.Map;
@@ -18,10 +19,10 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Dao extends AbstractDAO{
 
-    Logger logDeleted = Logger.getLogger("deleted");
-    Logger log_inserted =Logger.getLogger("inserted");
-    Logger log_modified = Logger.getLogger("modified");
-    Logger logDeletedAttrs = Logger.getLogger("deletedAttrs");
+    Logger logDeleted = LogManager.getLogger("deleted");
+    Logger log_inserted =LogManager.getLogger("inserted");
+    Logger log_modified = LogManager.getLogger("modified");
+    Logger logDeletedAttrs = LogManager.getLogger("deletedAttrs");
 
     private XdbIdDAO xdbDao= new XdbIdDAO();
     private ProteinDAO proteinDAO = new ProteinDAO();
