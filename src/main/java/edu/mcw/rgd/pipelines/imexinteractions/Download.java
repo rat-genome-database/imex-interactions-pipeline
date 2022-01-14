@@ -26,7 +26,7 @@ public class Download {
     private int maxRetryCount;
     private int retryCount = 0;
 
-    Logger log = LogManager.getLogger("main");
+    Logger log = LogManager.getLogger("status");
     Logger logDownload = LogManager.getLogger("download");
 
     private String agrUrl;
