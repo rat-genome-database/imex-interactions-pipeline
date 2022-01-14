@@ -135,10 +135,10 @@ public class Dao extends AbstractDAO{
             pi.setInteractionKey(key);
             int attCount = adao.updateAttributes(pi);
             if(attCount>0){
-                log_inserted.info("New Attribute Records to Existing Interaction: " + key + " - " +attCount);
+                log_inserted.debug("New Attribute Records to Existing Interaction: " + key + " - " +attCount);
             }
             if (iUpdate != 0) {
-                log_modified.info("Updated: " + pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType());
+                log_modified.debug("Updated: " + pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType());
             }
             return 0;
         }
@@ -147,7 +147,7 @@ public class Dao extends AbstractDAO{
         pi.setInteractionKey(key);
         int intCount = idao.insert(pi);
         if(intCount>0){
-            log_inserted.info("NEW INTERACTION: " + pi.getInteractionKey() +"|"+pi.getRgdId1()+"|"+pi.getRgdId2() +"|"+ pi.getInteractionType());
+            log_inserted.debug("NEW INTERACTION: " + pi.getInteractionKey() +"|"+pi.getRgdId1()+"|"+pi.getRgdId2() +"|"+ pi.getInteractionType());
         }
         for( InteractionAttribute a: pi.getInteractionAttributes() ){
             int aKey= adao.getNextKey("interactionAttributes_seq");
@@ -156,7 +156,7 @@ public class Dao extends AbstractDAO{
             newRecCount += adao.insert(a);
         }
         if(newRecCount>0) {
-           log_inserted.info("New Attribute Record for New INTERACTION:  "+ key  + " - " + newRecCount);
+           log_inserted.debug("New Attribute Record for New INTERACTION:  "+ key  + " - " + newRecCount);
         }
         return intCount;
     }
@@ -184,7 +184,7 @@ public class Dao extends AbstractDAO{
                 int key = pi.getInteractionKey();
                 int_count += idao.deleteUnmodifiedInteractions(key);
 
-                logDeleted.info(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
+                logDeleted.debug(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
             }
             logDeleted.info("DELETION COMPLETE");
         }
