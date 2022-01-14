@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Dao extends AbstractDAO{
 
+    Logger log = LogManager.getLogger("status");
     Logger logDeleted = LogManager.getLogger("deleted");
     Logger log_inserted =LogManager.getLogger("inserted");
     Logger log_modified = LogManager.getLogger("modified");
@@ -75,7 +76,7 @@ public class Dao extends AbstractDAO{
             rgdId = 0;
         }
         else if( genes.size()>1 ) {
-            System.out.println("multiple genes matching NCBI gene id "+uniprotId);
+            log.warn("multiple genes matching NCBI gene id "+uniprotId);
             rgdId = 0;
         } else {
             rgdId = genes.get(0).getRgdId();
@@ -171,7 +172,7 @@ public class Dao extends AbstractDAO{
 
         List<Interaction> piList = idao.getInteractionsModifiedBeforeTimeStamp(date);
 
-        System.out.println("STALE INTERACTIONS COUNT: " + piList.size());
+        log.info("STALE INTERACTIONS COUNT: " + piList.size());
         logDeleted.info("STALE INTERACTIONS COUNT: " + piList.size());
 
         if (piList.size() != 0) {
@@ -193,7 +194,7 @@ public class Dao extends AbstractDAO{
     public int deleteUnmodifiedInteractionAttributes(Date cutoffDate, String deleteThresholdStr, int initialAttrCount) throws Exception {
 
         String msg = "INITIAL INTERACTION ATTRIBUTES COUNT: " + Utils.formatThousands(initialAttrCount);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
 
         // convert delete-threshold-string to integer
@@ -203,24 +204,24 @@ public class Dao extends AbstractDAO{
         // final attribute count after pipeline has finished running
         int finalAttrCount = adao.getAttributeCount();
         msg = "FINAL INTERACTION ATTRIBUTES COUNT: " + Utils.formatThousands(finalAttrCount);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
 
         List<InteractionAttribute> staleAttributes = adao.getUnmodifiedAttributes(cutoffDate);
         int staleAttrCount = staleAttributes.size();
         msg = "STALE INTERACTION ATTRIBUTES COUNT: " + Utils.formatThousands(staleAttrCount);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
 
         // do not delete more than 5% of attributes
         int deleteThreshold = (deleteThresholdInPercent * finalAttrCount) / 100;
         msg = "  STALE INTERACTION ATTRIBUTES DELETE THRESHOLD ("+deleteThresholdInPercent+"%):  " + Utils.formatThousands(deleteThreshold);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
 
         if( staleAttrCount>deleteThreshold ) {
             msg = "  *** MORE STALE INTERACTION ATTRIBUTES THAN DELETE THRESHOLD!";
-            System.out.println(msg);
+            log.info(msg);
             logDeletedAttrs.info(msg);
             return 0;
         }
@@ -239,7 +240,7 @@ public class Dao extends AbstractDAO{
 
         int deletedAttrCount = adao.deleteUnmodifiedAttributes(cutoffDate);
         msg = "  STALE INTERACTION ATTRIBUTES DELETED: " + Utils.formatThousands(deletedAttrCount);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
         return deletedAttrCount;
     }

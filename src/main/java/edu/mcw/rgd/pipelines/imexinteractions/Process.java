@@ -4,6 +4,8 @@ package edu.mcw.rgd.pipelines.imexinteractions;
 import edu.mcw.rgd.datamodel.Interaction;
 import edu.mcw.rgd.datamodel.InteractionAttribute;
 import edu.mcw.rgd.process.Utils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import psidev.psi.mi.tab.model.BinaryInteraction;
 
 import java.io.BufferedReader;
@@ -13,6 +15,7 @@ import java.util.*;
  * Created by jthota on 3/14/2016.
  */
 public class Process {
+    Logger log = LogManager.getLogger("status");
     Dao dao = new Dao();
     private String deleteThreshold;
 
@@ -30,7 +33,7 @@ public class Process {
 
         long time1 = System.currentTimeMillis();
         int insertedRecordCount = dao.insertOrUpdate(piUnique);
-        System.out.println(" --- insertOrUpdate: elapsed "+Utils.formatElapsedTime(time1, System.currentTimeMillis()));
+        log.info(" --- insertOrUpdate: elapsed "+Utils.formatElapsedTime(time1, System.currentTimeMillis()));
 
         if( processStaleData ) {
             // set the start date to yesterday: pipeline server and db server could be slightly out-of-sync,
@@ -38,19 +41,19 @@ public class Process {
             Date startDate = Utils.addDaysToDate(new Date(), -1);
 
             int deletedInteractionAttributesCount = dao.deleteUnmodifiedInteractionAttributes(startDate, getDeleteThreshold(), initialAttrCount);
-            System.out.println("Deleted Interaction Attributes Count: " + deletedInteractionAttributesCount);
+            log.info("Deleted Interaction Attributes Count: " + deletedInteractionAttributesCount);
 
             int deletedInteractionsCount = dao.deleteUnmodifiedInteractions(startDate);
-            System.out.println("Deleted Interaction Records Count: " + deletedInteractionsCount);
+            log.info("Deleted Interaction Records Count: " + deletedInteractionsCount);
         }
 
-        System.out.println("===PROCESSING ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));
+        log.info("===PROCESSING ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));
         return insertedRecordCount;
     }
 
     List<Interaction> loadProteinInteractions(String fileName) throws Exception {
 
-        System.out.println("Loading "+fileName + " ...");
+        log.info("Loading "+fileName + " ...");
 
         BufferedReader br = Utils.openReader(fileName);
 
@@ -71,10 +74,10 @@ public class Process {
 
         br.close();
 
-        System.out.println("Downloaded Record Count: " + count);
-        System.out.println("Records with proteins having RGD_IDs:  " + piList1.size());
-        System.out.println("Count of incoming unassigned pubmed values (duplicates possible): " + parser.countOfUnassignedPubmedValues);
-        System.out.println();
+        log.info("Downloaded Record Count: " + count);
+        log.info("Records with proteins having RGD_IDs:  " + piList1.size());
+        log.info("Count of incoming unassigned pubmed values (duplicates possible): " + parser.countOfUnassignedPubmedValues);
+        log.info("");
 
         return piList1;
     }
@@ -93,8 +96,8 @@ public class Process {
                 uniqueI.getInteractionAttributes().addAll(i.getInteractionAttributes());
             }
         }
-        System.out.println("   ORIGINAL INCOMING INTERACTION COUNT: "+interactions.size());
-        System.out.println("   MERGED   INCOMING INTERACTION COUNT: "+map.size());
+        log.info("   ORIGINAL INCOMING INTERACTION COUNT: "+interactions.size());
+        log.info("   MERGED   INCOMING INTERACTION COUNT: "+map.size());
 
         // merge attributes
         int origAttrCount = 0;
@@ -106,8 +109,8 @@ public class Process {
             i.setInteractionAttributes(new ArrayList<>(attrs));
         }
 
-        System.out.println("   ORIGINAL INCOMING ATTR COUNT: "+origAttrCount);
-        System.out.println("   MERGED   INCOMING ATTR COUNT: "+newAttrCount);
+        log.info("   ORIGINAL INCOMING ATTR COUNT: "+origAttrCount);
+        log.info("   MERGED   INCOMING ATTR COUNT: "+newAttrCount);
         return map.values();
     }
 

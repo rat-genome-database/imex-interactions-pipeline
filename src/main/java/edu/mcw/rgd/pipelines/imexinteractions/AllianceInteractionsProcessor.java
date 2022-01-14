@@ -6,6 +6,8 @@ import edu.mcw.rgd.datamodel.Interaction;
 import edu.mcw.rgd.datamodel.InteractionAttribute;
 import edu.mcw.rgd.process.CounterPool;
 import edu.mcw.rgd.process.Utils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -25,6 +27,7 @@ public class AllianceInteractionsProcessor {
     private InteractionAttributesDAO adao= new InteractionAttributesDAO();
     BufferedWriter newInter;
     CounterPool counters = new CounterPool();
+    Logger log = LogManager.getLogger("status");
 
     public static void main(String[] args) throws Exception {
         new AllianceInteractionsProcessor().run();
@@ -65,7 +68,7 @@ public class AllianceInteractionsProcessor {
             e.printStackTrace();
         }
 
-        System.out.println(counters.dumpAlphabetically());
+        log.info(counters.dumpAlphabetically());
 
         newInter.close();
     }
@@ -109,7 +112,7 @@ public class AllianceInteractionsProcessor {
         in.close();
         out.close();
 
-        System.out.println("DATA LINES: "+dataLines);
+        //log.info("DATA LINES: "+dataLines);
         return fileNames;
     }
 
