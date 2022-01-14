@@ -3,6 +3,8 @@ package edu.mcw.rgd.pipelines.imexinteractions;
 import edu.mcw.rgd.datamodel.SpeciesType;
 import edu.mcw.rgd.process.Utils;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.beans.factory.xml.XmlBeanDefinitionReader;
 import org.springframework.core.io.FileSystemResource;
@@ -18,6 +20,7 @@ public class Manager {
     private List<String> supportedSpecies;
 
     Process process;
+    Logger log = LogManager.getLogger("status");
 
     /**
      * PARSE THE ARGUMENTS AND MAKE METHOD CALLS TO DOWNLOAD AND PROCESS
@@ -28,7 +31,7 @@ public class Manager {
         DefaultListableBeanFactory bf = new DefaultListableBeanFactory();
         new XmlBeanDefinitionReader(bf).loadBeanDefinitions(new FileSystemResource("properties/AppConfigure.xml"));
         Manager manager = (Manager) (bf.getBean("manager"));
-        System.out.println(manager.getVersion());
+        manager.log.info(manager.getVersion());
 
         if (args.length ==0 || args.length<2) {
             manager.printUsageAndExit();
@@ -77,19 +80,19 @@ public class Manager {
         }
 
         long time1 = System.currentTimeMillis();
-        System.out.println("Inserted Record Count: " + insertedRecordCount);
-        System.out.println("PROCESS ELAPSED TIME: "+ Utils.formatElapsedTime(time0, time1));
-        System.out.println("--- OK --- pipeline finished normally ---");
+        log.info("Inserted Record Count: " + insertedRecordCount);
+        log.info("PROCESS ELAPSED TIME: "+ Utils.formatElapsedTime(time0, time1));
+        log.info("--- OK --- pipeline finished normally ---");
     }
 
     void initFilesForDate(String fileDate) {
         String file1 = "data/Interactions_AllSPECIES_"+fileDate+".gz";
         filenames.add(file1);
-        System.out.println("added file "+file1);
+        log.info("added file "+file1);
 
         String file2 = "data/"+fileDate+"_Alliance_interactions.mitab.gz";
         filenames.add(file2);
-        System.out.println("added file "+file2);
+        log.info("added file "+file2);
     }
 
 
@@ -97,30 +100,27 @@ public class Manager {
         long time0 = System.currentTimeMillis();
 
         if( getSupportedSpecies().contains(species) ) {
-            System.out.println("Downloading " + species + " protein Interactions data to a local file....");
+            log.info("Downloading " + species + " protein Interactions data to a local file....");
             List<String> all = new ArrayList<>(Arrays.asList(species));
             filenames.add(download.download2File(all, species));
         } else if( species.equals("all") ) {
             filenames.addAll(download.downloadAgrFiles());
 
-            System.out.println("Downloading protein interactions data of BELOW SPECIES to a local file... ");
-            for(String speciesName: getSupportedSpecies()){
-                System.out.print(" "+speciesName);
-            }
-            System.out.println();
+            log.info("Downloading protein interactions data of BELOW SPECIES to a local file... ");
+            log.info(Utils.concatenate(getSupportedSpecies(), ""));
 
             filenames.add(download.download2File(getSupportedSpecies(), "AllSPECIES"));
         } else {
             printUsageAndExit();
         }
 
-        System.out.println("   ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));
-        System.out.println("   IMEX API REQUESTS MADE: "+ download.getApiRequestsMade());
+        log.info("   ELAPSED TIME: "+ Utils.formatElapsedTime(time0, System.currentTimeMillis()));
+        log.info("   IMEX API REQUESTS MADE: "+ download.getApiRequestsMade());
         if( download.getRetryCount()!=0 ) {
-            System.out.println("      RETRIED API REQUESTS: " + download.getRetryCount());
+            log.info("      RETRIED API REQUESTS: " + download.getRetryCount());
         }
         if( download.getFailedRequests()!=0 ) {
-            System.out.println("      FAILED API REQUESTS: " + download.getFailedRequests());
+            log.info("      FAILED API REQUESTS: " + download.getFailedRequests());
         }
     }
 
@@ -145,7 +145,7 @@ public class Manager {
         for( String speciesCommonName: getSupportedSpecies() ) {
             int speciesTypeKey = SpeciesType.parse(speciesCommonName);
             String species = String.format("%10s", speciesCommonName);
-            System.out.println(" Count of interactions for "+species+" = "+dao.getInteractionCountForSpecies(speciesTypeKey));
+            log.info(" Count of interactions for "+species+" = "+dao.getInteractionCountForSpecies(speciesTypeKey));
         }
     }
 

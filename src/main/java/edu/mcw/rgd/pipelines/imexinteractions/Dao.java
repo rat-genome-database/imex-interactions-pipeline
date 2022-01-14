@@ -5,7 +5,8 @@ import edu.mcw.rgd.dao.impl.*;
 
 import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.*;
 import java.util.Map;
@@ -18,10 +19,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class Dao extends AbstractDAO{
 
-    Logger logDeleted = Logger.getLogger("deleted");
-    Logger log_inserted =Logger.getLogger("inserted");
-    Logger log_modified = Logger.getLogger("modified");
-    Logger logDeletedAttrs = Logger.getLogger("deletedAttrs");
+    Logger log = LogManager.getLogger("status");
+    Logger logDeleted = LogManager.getLogger("deleted");
+    Logger log_inserted =LogManager.getLogger("inserted");
+    Logger log_modified = LogManager.getLogger("modified");
+    Logger logDeletedAttrs = LogManager.getLogger("deletedAttrs");
 
     private XdbIdDAO xdbDao= new XdbIdDAO();
     private ProteinDAO proteinDAO = new ProteinDAO();
@@ -74,7 +76,7 @@ public class Dao extends AbstractDAO{
             rgdId = 0;
         }
         else if( genes.size()>1 ) {
-            System.out.println("multiple genes matching NCBI gene id "+uniprotId);
+            log.warn("multiple genes matching NCBI gene id "+uniprotId);
             rgdId = 0;
         } else {
             rgdId = genes.get(0).getRgdId();
@@ -133,10 +135,10 @@ public class Dao extends AbstractDAO{
             pi.setInteractionKey(key);
             int attCount = adao.updateAttributes(pi);
             if(attCount>0){
-                log_inserted.info("New Attribute Records to Existing Interaction: " + key + " - " +attCount);
+                log_inserted.debug("New Attribute Records to Existing Interaction: " + key + " - " +attCount);
             }
             if (iUpdate != 0) {
-                log_modified.info("Updated: " + pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType());
+                log_modified.debug("Updated: " + pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType());
             }
             return 0;
         }
@@ -145,7 +147,7 @@ public class Dao extends AbstractDAO{
         pi.setInteractionKey(key);
         int intCount = idao.insert(pi);
         if(intCount>0){
-            log_inserted.info("NEW INTERACTION: " + pi.getInteractionKey() +"|"+pi.getRgdId1()+"|"+pi.getRgdId2() +"|"+ pi.getInteractionType());
+            log_inserted.debug("NEW INTERACTION: " + pi.getInteractionKey() +"|"+pi.getRgdId1()+"|"+pi.getRgdId2() +"|"+ pi.getInteractionType());
         }
         for( InteractionAttribute a: pi.getInteractionAttributes() ){
             int aKey= adao.getNextKey("interactionAttributes_seq");
@@ -154,7 +156,7 @@ public class Dao extends AbstractDAO{
             newRecCount += adao.insert(a);
         }
         if(newRecCount>0) {
-           log_inserted.info("New Attribute Record for New INTERACTION:  "+ key  + " - " + newRecCount);
+           log_inserted.debug("New Attribute Record for New INTERACTION:  "+ key  + " - " + newRecCount);
         }
         return intCount;
     }
@@ -170,7 +172,7 @@ public class Dao extends AbstractDAO{
 
         List<Interaction> piList = idao.getInteractionsModifiedBeforeTimeStamp(date);
 
-        System.out.println("STALE INTERACTIONS COUNT: " + piList.size());
+        log.info("STALE INTERACTIONS COUNT: " + piList.size());
         logDeleted.info("STALE INTERACTIONS COUNT: " + piList.size());
 
         if (piList.size() != 0) {
@@ -182,7 +184,7 @@ public class Dao extends AbstractDAO{
                 int key = pi.getInteractionKey();
                 int_count += idao.deleteUnmodifiedInteractions(key);
 
-                logDeleted.info(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
+                logDeleted.debug(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
             }
             logDeleted.info("DELETION COMPLETE");
         }
@@ -192,7 +194,7 @@ public class Dao extends AbstractDAO{
     public int deleteUnmodifiedInteractionAttributes(Date cutoffDate, String deleteThresholdStr, int initialAttrCount) throws Exception {
 
         String msg = "INITIAL INTERACTION ATTRIBUTES COUNT: " + Utils.formatThousands(initialAttrCount);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
 
         // convert delete-threshold-string to integer
@@ -202,24 +204,24 @@ public class Dao extends AbstractDAO{
         // final attribute count after pipeline has finished running
         int finalAttrCount = adao.getAttributeCount();
         msg = "FINAL INTERACTION ATTRIBUTES COUNT: " + Utils.formatThousands(finalAttrCount);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
 
         List<InteractionAttribute> staleAttributes = adao.getUnmodifiedAttributes(cutoffDate);
         int staleAttrCount = staleAttributes.size();
         msg = "STALE INTERACTION ATTRIBUTES COUNT: " + Utils.formatThousands(staleAttrCount);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
 
         // do not delete more than 5% of attributes
         int deleteThreshold = (deleteThresholdInPercent * finalAttrCount) / 100;
         msg = "  STALE INTERACTION ATTRIBUTES DELETE THRESHOLD ("+deleteThresholdInPercent+"%):  " + Utils.formatThousands(deleteThreshold);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
 
         if( staleAttrCount>deleteThreshold ) {
             msg = "  *** MORE STALE INTERACTION ATTRIBUTES THAN DELETE THRESHOLD!";
-            System.out.println(msg);
+            log.info(msg);
             logDeletedAttrs.info(msg);
             return 0;
         }
@@ -238,7 +240,7 @@ public class Dao extends AbstractDAO{
 
         int deletedAttrCount = adao.deleteUnmodifiedAttributes(cutoffDate);
         msg = "  STALE INTERACTION ATTRIBUTES DELETED: " + Utils.formatThousands(deletedAttrCount);
-        System.out.println(msg);
+        log.info(msg);
         logDeletedAttrs.info(msg);
         return deletedAttrCount;
     }

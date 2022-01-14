@@ -1,3 +1,4 @@
+2) investigate if we can download interactions from the Alliance
 1) to speed up the pipeline:
    -process in parallel separate stages of processing
    -InteractionAttributesDAO.updateLastModifiedDate() takes up ~40% of total processing time

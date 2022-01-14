@@ -15,39 +15,49 @@ targetCompatibility = 1.8
 mainClassName = 'edu.mcw.rgd.pipelines.imexinteractions.Manager'
 String myAppName = 'IMEXInteractionsPipeline'
 
+project.archivesBaseName = myAppName
+
 repositories {
     mavenCentral()
-
-    // psicquic specific maven repos
-    maven { url "http://www.ebi.ac.uk/intact/maven/nexus/content/repositories/ebi-repo/" }
-    maven { url "http://repository.springsource.com/maven/bundles/release" }
-    maven { url "http://repository.springsource.com/maven/bundles/external" }
 }
 
 dependencies {
     compile 'org.apache.commons:commons-compress:1.19'
-    compile 'org.apache.commons:commons-dbcp2:2.7.0'
-    compile 'commons-net:commons-net:3.6'
-    compile 'org.apache.httpcomponents:httpclient:4.5.11'
+    compile 'org.apache.commons:commons-dbcp2:2.8.0'
+    compile 'commons-net:commons-net:3.7'
+    compile 'org.apache.httpcomponents:httpclient:4.5.12'
 
-    compile 'log4j:log4j:1.2.17'
-    compile 'com.oracle.ojdbc:ojdbc8:19.3.0.0'
-    compile 'org.springframework:spring-beans:5.2.1.RELEASE'
-    compile 'org.springframework:spring-jdbc:5.2.1.RELEASE'
+    compile 'org.apache.logging.log4j:log4j-api:2.17.1'
+    compile 'org.apache.logging.log4j:log4j-core:2.17.1'
+    compile 'com.oracle.database.jdbc:ojdbc8:19.6.0.0'
+    compile 'org.springframework:spring-beans:5.2.2.RELEASE'
+    compile 'org.springframework:spring-jdbc:5.2.2.RELEASE'
 
+    compile fileTree(dir: 'lib', include: '*.jar')
+}
+
+/* original dependencies: non-maven central repos don't longer work
+   so it is better to include the actual jars
+
+repositories {
+    // psicquic specific maven repos
+    maven { url "http://www.ebi.ac.uk/intact/maven/nexus/content/repositories/ebi-repo/" }
+    maven { url "http://repository.springsource.com/maven/bundles/release" }
+    maven { url "http://repository.springsource.com/maven/bundles/external"
+}
+
+dependencies {
     // psicquic simple client
-    //compile 'org.hupo.psi.mi.psicquic:psicquic-simple-client:1.4.0'  // this does not work
+    // compile 'org.hupo.psi.mi.psicquic:psicquic-simple-client:1.4.0'  // this does not work
     compile 'org.hupo.psi.mi.psicquic:psicquic-simple-client:1.3.3'
 
     // jami mitab parser
     compile 'psidev.psi.mi.jami:jami-mitab:1.1.4'
     compile 'psidev.psi.mi.jami:jami-commons:1.1.5'
-
-    compile fileTree(dir: 'lib', include: '*.jar')
 }
+*/
 
 jar {
-    baseName = myAppName
     manifest {
         attributes(
             'Built-By': System.getProperty('user.name'),
