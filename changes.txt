@@ -1,6 +1,6 @@
 Apr 26, 2022
   tuned up logging
-  
+
 Jan 13, 2022
   updated log4j to avoid zero day exploit
   discontinued non-maven central dependencies: now these jars are included as is in lib dir
