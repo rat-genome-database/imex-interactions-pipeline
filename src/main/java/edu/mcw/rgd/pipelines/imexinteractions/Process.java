@@ -40,8 +40,7 @@ public class Process {
             // and we don't want to delete the just added interactions and attributes
             Date startDate = Utils.addDaysToDate(new Date(), -1);
 
-            int deletedInteractionAttributesCount = dao.deleteUnmodifiedInteractionAttributes(startDate, getDeleteThreshold(), initialAttrCount);
-            log.info("Deleted Interaction Attributes Count: " + deletedInteractionAttributesCount);
+            dao.deleteUnmodifiedInteractionAttributes(startDate, getDeleteThreshold(), initialAttrCount);
 
             int deletedInteractionsCount = dao.deleteUnmodifiedInteractions(startDate);
             log.info("Deleted Interaction Records Count: " + deletedInteractionsCount);
