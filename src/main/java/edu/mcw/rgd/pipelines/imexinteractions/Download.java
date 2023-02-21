@@ -212,7 +212,7 @@ public class Download {
     public List<String> downloadAgrFiles() throws Exception {
         List<String> downloadedFiles = new ArrayList<>();
 
-        if( false ) {
+        if( true ) {
             // this will be the code to download molecular and genetic interactions from AGR, when the file will be fixed
             FileDownloader fd = new FileDownloader();
             fd.setExternalFile(getAgrMolecularInteractionsUrl());

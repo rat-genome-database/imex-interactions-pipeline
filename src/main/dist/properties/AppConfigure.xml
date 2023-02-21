@@ -43,9 +43,6 @@
         </property>
         <property name="maxRetryCount" value="10"/>
 
-        <!-- obsolete download url , as of May 2021
-        <property name="agrUrl" value="https://download.alliancegenome.org/INT/Alliance_molecular_interactions.tar.gz"/>
-        -->
         <property name="agrGeneticInteractionsUrl" value="https://fms.alliancegenome.org/download/INTERACTION-GEN_COMBINED.tsv.gz"/>
         <property name="agrMolecularInteractionsUrl" value="https://fms.alliancegenome.org/download/INTERACTION-MOL_COMBINED.tsv.gz"/>
     </bean>

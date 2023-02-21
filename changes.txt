@@ -1,5 +1,6 @@
 Feb 21, 2023
   updated build.gradle to be gradle 6.x + compatible
+  reenabled download of latest interactions file from the Alliance
 
 Aug 26, 2022
 Apr 26, 2022
