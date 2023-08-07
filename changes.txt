@@ -1,3 +1,6 @@
+Aug 07, 2023
+  disabled processing of interactions files from the Alliance because they are not parseable
+
 Feb 21, 2023
   updated build.gradle to be gradle 6.x + compatible
   reenabled download of latest interactions file from the Alliance

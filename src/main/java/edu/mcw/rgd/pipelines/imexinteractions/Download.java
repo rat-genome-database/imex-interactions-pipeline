@@ -29,7 +29,7 @@ public class Download {
     Logger log = LogManager.getLogger("status");
     Logger logDownload = LogManager.getLogger("download");
 
-    private String agrUrl;
+    private Boolean processAllianceFiles;
     private String agrGeneticInteractionsUrl;
     private String agrMolecularInteractionsUrl;
 
@@ -212,8 +212,9 @@ public class Download {
     public List<String> downloadAgrFiles() throws Exception {
         List<String> downloadedFiles = new ArrayList<>();
 
-        if( true ) {
-            // this will be the code to download molecular and genetic interactions from AGR, when the file will be fixed
+        if( getProcessAllianceFiles() ) {
+
+            // download molecular and genetic interactions from the Alliance
             FileDownloader fd = new FileDownloader();
             fd.setExternalFile(getAgrMolecularInteractionsUrl());
             fd.setLocalFile("data/AGR_molecular_interactions.mitab.gz");
@@ -294,12 +295,12 @@ public class Download {
         return maxRetryCount;
     }
 
-    public void setAgrUrl(String agrUrl) {
-        this.agrUrl = agrUrl;
+    public Boolean getProcessAllianceFiles() {
+        return processAllianceFiles;
     }
 
-    public String getAgrUrl() {
-        return agrUrl;
+    public void setProcessAllianceFiles(Boolean processAllianceFiles) {
+        this.processAllianceFiles = processAllianceFiles;
     }
 
     public String getAgrGeneticInteractionsUrl() {
