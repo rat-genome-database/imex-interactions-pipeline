@@ -69,7 +69,7 @@ public class Manager {
                 break;
 
             case "-process_for_date":
-                initFilesForDate(args[1]);
+                initFilesForDate(args[1], download.getProcessAllianceFiles());
 
                 insertedRecordCount = process.processFiles(filenames, true);
                 printInteractionCounts();
@@ -85,14 +85,16 @@ public class Manager {
         log.info("--- OK --- pipeline finished normally ---");
     }
 
-    void initFilesForDate(String fileDate) {
+    void initFilesForDate(String fileDate, boolean processAllianceFiles) {
         String file1 = "data/Interactions_AllSPECIES_"+fileDate+".gz";
         filenames.add(file1);
         log.info("added file "+file1);
 
-        String file2 = "data/"+fileDate+"_Alliance_interactions.mitab.gz";
-        filenames.add(file2);
-        log.info("added file "+file2);
+        if( processAllianceFiles ) {
+            String file2 = "data/" + fileDate + "_Alliance_interactions.mitab.gz";
+            filenames.add(file2);
+            log.info("added file " + file2);
+        }
     }
 
 

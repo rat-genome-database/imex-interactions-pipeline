@@ -1,5 +1,6 @@
 Oct 10, 2023
   renamed distro to 'imex-interactions-pipeline'
+  fixed logic for cmdline param '-process_for_date'
 
 Aug 07, 2023
   disabled processing of interactions files from the Alliance because they are not parseable
