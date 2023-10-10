@@ -1,3 +1,6 @@
+Oct 10, 2023
+  renamed distro to 'imex-interactions-pipeline'
+
 Aug 07, 2023
   disabled processing of interactions files from the Alliance because they are not parseable
 

@@ -2,7 +2,7 @@
 # shell script to run IMEXInteractionsPipeline
 . /etc/profile
 
-APPNAME=IMEXInteractionsPipeline
+APPNAME=imex-interactions-pipeline
 APPDIR=/home/rgddata/pipelines/$APPNAME
 SERVER=`hostname -s | tr '[a-z]' '[A-Z]'`
 EMAIL_LIST=mtutaj@mcw.edu
