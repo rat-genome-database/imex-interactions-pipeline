@@ -1,3 +1,6 @@
+Feb 13, 2024
+  improved handling of interaction deletions
+
 Oct 10, 2023
   renamed distro to 'imex-interactions-pipeline'
   fixed logic for cmdline param '-process_for_date'

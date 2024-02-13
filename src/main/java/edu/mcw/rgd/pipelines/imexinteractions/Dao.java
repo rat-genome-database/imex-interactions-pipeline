@@ -168,7 +168,9 @@ public class Dao extends AbstractDAO{
      * @throws Exception
      */
     public int deleteUnmodifiedInteractions(Date date) throws Exception {
-        int int_count =0;
+
+        int deleted =0;
+        int skipped = 0;
 
         List<Interaction> piList = idao.getInteractionsModifiedBeforeTimeStamp(date);
 
@@ -180,15 +182,26 @@ public class Dao extends AbstractDAO{
 
             for (Interaction pi : piList) {
 
-                //***********To delete unmodified records uncomment the below lines of code************//
                 int key = pi.getInteractionKey();
-                int_count += idao.deleteUnmodifiedInteractions(key);
+                try {
+                    deleted += idao.deleteUnmodifiedInteractions(key);
 
-                logDeleted.debug(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
+                    logDeleted.debug(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
+
+                } catch( java.sql.SQLIntegrityConstraintViolationException e ) {
+                    skipped++;
+                    logDeleted.debug("ERROR: cannot delete: nested exception is java.sql.SQLIntegrityConstraintViolationException: ORA-02292: integrity constraint (CURPROD.INTERACTION_ATTRIBUTES_FK) violated - child record found");
+                    logDeleted.debug("ERROR: "+pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
+                }
             }
             logDeleted.info("DELETION COMPLETE");
         }
-        return int_count;
+
+        if( skipped>0 ) {
+            log.info("WARNING: some interactions could not be deleted (db integrity constraints violated): " + skipped);
+        }
+
+        return deleted;
     }
 
     public int deleteUnmodifiedInteractionAttributes(Date cutoffDate, String deleteThresholdStr, int initialAttrCount) throws Exception {
