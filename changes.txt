@@ -1,3 +1,6 @@
+Jun 10, 2026
+  batched the interaction last_modified_date refresh (was a hotspot); resource-cleanup fixes; updated dependencies
+
 May 12, 2026
   removed retired MatrixDB PSICQUIC endpoint from identifiers list (avoids 26 timeouts per run); updated dependencies
 

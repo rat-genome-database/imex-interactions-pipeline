@@ -7,9 +7,12 @@ import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.jdbc.object.BatchSqlUpdate;
 
+import java.sql.Types;
 import java.util.*;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -111,14 +114,42 @@ public class Dao extends AbstractDAO{
     public int insertOrUpdate(Collection<Interaction> piList) throws Exception{
 
         AtomicInteger count = new AtomicInteger(0);
+
+        // existing interactions only need their last_modified_date refreshed; collect their keys
+        // (deduplicated) and refresh them in one batch instead of one update per interaction --
+        // this per-row update used to be a major hotspot (~40% of runtime)
+        Set<Integer> existingInteractionKeys = ConcurrentHashMap.newKeySet();
+
         piList.parallelStream().forEach( pi -> {
             try {
-                count.addAndGet(insertOrUpdate(pi));
+                count.addAndGet(insertOrUpdate(pi, existingInteractionKeys));
             } catch(Exception e) {
                 throw new RuntimeException(e);
             }
         });
+
+        int refreshed = batchRefreshInteractionLastModifiedDate(existingInteractionKeys);
+        log_modified.debug("Refreshed last_modified_date for existing interactions: " + refreshed);
+
         return count.intValue();
+    }
+
+    /**
+     * Refresh last_modified_date for the given interaction keys in a single JDBC batch,
+     * replacing a per-interaction update that was a major hotspot.
+     * @return count of rows updated
+     */
+    int batchRefreshInteractionLastModifiedDate(Set<Integer> interactionKeys) throws Exception {
+        if( interactionKeys.isEmpty() ) {
+            return 0;
+        }
+        String sql = "UPDATE interactions SET last_modified_date=SYSDATE WHERE interaction_key=?";
+        BatchSqlUpdate su = new BatchSqlUpdate(this.getDataSource(), sql, new int[]{ Types.INTEGER });
+        su.compile();
+        for( int key: interactionKeys ) {
+            su.update(key);
+        }
+        return executeBatch(su);
     }
 
     /**
@@ -127,19 +158,18 @@ public class Dao extends AbstractDAO{
      * @return
      * @throws Exception
      */
-    public int insertOrUpdate(Interaction pi) throws  Exception{
+    public int insertOrUpdate(Interaction pi, Set<Integer> existingInteractionKeys) throws  Exception{
         int newRecCount=0;
         int key = idao.getInteractionKey(pi);
         if(key!=0){
-            int iUpdate = idao.updateLastModifiedDate(key);
             pi.setInteractionKey(key);
+            // existing interaction: defer the last_modified_date bump to a single batch (see caller)
+            existingInteractionKeys.add(key);
             int attCount = adao.updateAttributes(pi);
             if(attCount>0){
                 log_inserted.debug("New Attribute Records to Existing Interaction: " + key + " - " +attCount);
             }
-            if (iUpdate != 0) {
-                log_modified.debug("Updated: " + pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType());
-            }
+            log_modified.debug("Updated: " + pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType());
             return 0;
         }
 

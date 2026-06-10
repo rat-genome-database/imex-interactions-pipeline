@@ -54,24 +54,22 @@ public class Process {
 
         log.info("Loading "+fileName + " ...");
 
-        BufferedReader br = Utils.openReader(fileName);
-
         List<Interaction> piList1 = new ArrayList<>();
         Parser parser = new Parser();
 
         psidev.psi.mi.tab.io.PsimiTabReader reader = new psidev.psi.mi.tab.PsimiTabReader();
         int count = 0;
 
-        for( BinaryInteraction bi: reader.read(br) ){
-            count++;
-            List<Interaction> piList2= parser.parseInteraction(bi);
+        try( BufferedReader br = Utils.openReader(fileName) ) {
+            for( BinaryInteraction bi: reader.read(br) ){
+                count++;
+                List<Interaction> piList2= parser.parseInteraction(bi);
 
-            if( piList2.size()>0 ){
-                piList1.addAll(piList2);
+                if( piList2.size()>0 ){
+                    piList1.addAll(piList2);
+                }
             }
         }
-
-        br.close();
 
         log.info("Downloaded Record Count: " + count);
         log.info("Records with proteins having RGD_IDs:  " + piList1.size());
