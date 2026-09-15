@@ -1,7 +1,7 @@
 package edu.mcw.rgd.pipelines.imexinteractions;
 
 import edu.mcw.rgd.datamodel.SpeciesType;
-import edu.mcw.rgd.process.FileDownloader;
+import edu.mcw.rgd.process.FileDownloader2;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -219,7 +219,7 @@ public class Download {
         if( getProcessAllianceFiles() ) {
 
             // download molecular and genetic interactions from the Alliance
-            FileDownloader fd = new FileDownloader();
+            FileDownloader2 fd = new FileDownloader2();
             fd.setExternalFile(getAgrMolecularInteractionsUrl());
             fd.setLocalFile("data/AGR_molecular_interactions.mitab.gz");
             fd.setPrependDateStamp(true);

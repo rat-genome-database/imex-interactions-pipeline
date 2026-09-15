@@ -1,3 +1,7 @@
+Sep 15, 2026
+  switched AGR file downloads to FileDownloader2; dropped httpclient and commons-net dependencies;
+    updated rgdcore jar; updated dependencies
+
 Jun 10, 2026
   batched the interaction last_modified_date refresh (was a hotspot); resource-cleanup fixes; updated dependencies
 
