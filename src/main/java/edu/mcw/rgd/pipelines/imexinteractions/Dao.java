@@ -7,6 +7,7 @@ import edu.mcw.rgd.datamodel.*;
 import edu.mcw.rgd.process.Utils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.object.BatchSqlUpdate;
 
 import java.sql.Types;
@@ -143,7 +144,7 @@ public class Dao extends AbstractDAO{
         if( interactionKeys.isEmpty() ) {
             return 0;
         }
-        String sql = "UPDATE interactions SET last_modified_date=SYSDATE WHERE interaction_key=?";
+        String sql = "UPDATE interactions SET last_modified_date=LOCALTIMESTAMP(0) WHERE interaction_key=?";
         BatchSqlUpdate su = new BatchSqlUpdate(this.getDataSource(), sql, new int[]{ Types.INTEGER });
         su.compile();
         for( int key: interactionKeys ) {
@@ -218,9 +219,9 @@ public class Dao extends AbstractDAO{
 
                     logDeleted.debug(pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
 
-                } catch( java.sql.SQLIntegrityConstraintViolationException e ) {
+                } catch( DataIntegrityViolationException e ) {
                     skipped++;
-                    logDeleted.debug("ERROR: cannot delete: nested exception is java.sql.SQLIntegrityConstraintViolationException: ORA-02292: integrity constraint (CURPROD.INTERACTION_ATTRIBUTES_FK) violated - child record found");
+                    logDeleted.debug("ERROR: cannot delete: integrity constraint violated - child record found: " + e.getMostSpecificCause().getMessage());
                     logDeleted.debug("ERROR: "+pi.getInteractionKey() + "|" + pi.getRgdId1() + "|" + pi.getRgdId2() + "|" + pi.getInteractionType() + "|" + pi.getCreatedDate() + "|" + pi.getLastModifiedDate());
                 }
             }
